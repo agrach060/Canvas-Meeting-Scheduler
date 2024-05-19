@@ -224,3 +224,10 @@ def delete_event(event_id):
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+    
+# clear the session credentials
+@google_calendar_bp.route('/logout', methods=['POST'])
+def logout():
+    # Clear Google OAuth2 credentials from the session
+    session.pop('credentials', None)
+    return jsonify({'message': 'Logged out successfully'}), 200

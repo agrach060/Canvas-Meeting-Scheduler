@@ -25,26 +25,39 @@ const Logout = () => {
 
   // Function to handle the logout process
   useEffect(() => {
-    const handleLogout = () => {
-      fetch("/logout", {
-        method: "POST",
-        credentials: "include", // Necessary to include the HTTP-only cookies
-      })
-        .then((response) => {
-          if (response.ok) {
-            setUser(null);
-            navigate("/");
-          } else {
-            console.error("Logout failed");
-          }
-        })
-        .catch((error) => {
-          console.error("Network error", error);
+    const handleLogout = async () => {
+      try {
+        // log out from the website
+        const response = await fetch("/logout", {
+          method: "POST",
+          credentials: "include", // Necessary to include the HTTP-only cookies
         });
+
+        if (response.ok) {
+          setUser(null);
+          // log out from Google OAuth2
+          const googleResponse = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include", // Necessary to include the HTTP-only cookies
+          });
+
+          if (!googleResponse.ok) {
+            console.error("Google Logout failed");
+          }
+
+          navigate("/");
+        } else {
+          console.error("Logout failed");
+        }
+      } catch (error) {
+        console.error("Network error", error);
+      }
     };
 
-    // Call the handleLogout function immediately on component mount
-    handleLogout();
+    // call the handleLogout function immediately on component mount
+    (async () => {
+      await handleLogout();
+    })();
   }, [navigate, setUser]); // Dependencies for useEffect
 
   ////////////////////////////////////////////////////////
