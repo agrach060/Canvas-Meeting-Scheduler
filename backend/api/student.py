@@ -343,6 +343,7 @@ def get_student_appointments_for_course():
                 "date": appt.appointment_date,
                 "start_time": appt.start_time,
                 "end_time": appt.end_time,
+                'event_id': appt.event_id,
                 "status": appt.status,
                 "notes": appt.notes,
                 "physical_location": appt.physical_location,
@@ -429,6 +430,7 @@ def cancel_appointment(appointment_id):
                 appointment.meeting_url = None
                 appointment.attendee_id = None
                 appointment.notes = None
+                appointment.event_id = None
                 db.session.commit()
                 return jsonify({"message": "Appointment cancelled successfully"}), 200
             else:
@@ -563,6 +565,29 @@ def get_available_appointments(program_id, course_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@student.route('/student/appointments/update_event_id/<appointment_id>', methods=['POST'])
+@jwt_required()
+def test_update_event_id(appointment_id):
+    try:
+        data = request.get_json()
+        event_id = data.get('event_id')
+        
+        if not event_id:
+            return jsonify({"error": "Event ID is required"}), 400
+
+        appointment = Appointment.query.get(appointment_id)
+        if not appointment:
+            return jsonify({"error": "Appointment not found"}), 404
+
+        appointment.event_id = event_id
+        db.session.commit()
+
+        return jsonify({"message": "Event ID updated successfully"}), 200
+
+    except Exception as e:
+        print(f"Exception: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 # reserve an appointment for a student
 @student.route('/student/appointments/reserve/<appointment_id>/<course_id>', methods=['POST'])
 @jwt_required()
@@ -622,6 +647,7 @@ def reserve_appointment(appointment_id, course_id):
                 appointment.attendee_id = student_id
                 appointment.course_id = course_id
                 appointment.notes = data.get('notes', None)
+                appointment.event_id = data.get('event_id')
                 if instructor_limits.auto_approve_appointments:
                     appointment.status = 'reserved'
                 else:

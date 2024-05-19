@@ -143,6 +143,11 @@ export default function Navbar() {
               PROFILE
             </CustomLink>
 
+            {/* Display the user's calendar depending on calendar type they are using */}
+            <CustomLink to="/view-my-calendar" className="hover:text-gold font-headlines">
+              VIEW MY CALENDAR
+            </CustomLink>
+
             {/* Display LOGOUT to admin, instructor, and student on Navbar with its CustomLink set */}
             <CustomLink to="/logout" className="hover:text-gold font-headlines">
               LOGOUT

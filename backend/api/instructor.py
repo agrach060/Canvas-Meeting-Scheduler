@@ -24,6 +24,7 @@ from datetime import datetime, timedelta, timezone
 from .student import get_week_range
 from .programs import get_program_name, get_course_name
 from .user import is_instructor
+from .calendars.google_calendar import GoogleCalendarService  
 
 instructor = Blueprint('instructor', __name__)
 
@@ -228,7 +229,18 @@ def generate_appointments(instructor_id, date, start_time, end_time, physical_lo
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
 
+        google_calendar_service = GoogleCalendarService()
+
+
         if duration == 0 or not duration:
+            event_id = google_calendar_service.create_event(
+                summary="Appointment",
+                location=physical_location,
+                description=meeting_url,
+                start_datetime=datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M"),
+                end_datetime=datetime.strptime(f"{date} {end_time}", "%Y-%m-%d %H:%M")
+            )
+            print("Single appointment event created with event ID:", event_id)
             new_appointment = Appointment(
                 host_id=instructor_id,
                 appointment_date=date,
@@ -237,11 +249,20 @@ def generate_appointments(instructor_id, date, start_time, end_time, physical_lo
                 status="posted",
                 physical_location=physical_location,
                 meeting_url=meeting_url,
-                availability_id=availability_id
+                availability_id=availability_id,
+                event_id=event_id
             )
             db.session.add(new_appointment)
         else:
             while start_datetime + timedelta(minutes=duration) <= end_datetime:
+                event_id = google_calendar_service.create_event(
+                    summary="Appointment",
+                    location=physical_location,
+                    description=meeting_url,
+                    start_datetime=start_datetime,
+                    end_datetime=start_datetime + timedelta(minutes=duration)
+                )
+                print("Recurring appointment event created with event ID:", event_id)
                 new_appointment = Appointment(
                     host_id=instructor_id,
                     appointment_date=date,
@@ -250,7 +271,8 @@ def generate_appointments(instructor_id, date, start_time, end_time, physical_lo
                     status="posted",
                     physical_location=physical_location,
                     meeting_url=meeting_url,
-                    availability_id=availability_id
+                    availability_id=availability_id,
+                    event_id=event_id
                 )
                 start_datetime += timedelta(minutes=duration)
                 db.session.add(new_appointment)
@@ -438,11 +460,12 @@ def get_instructor_appointments():
                 "date": appt.appointment_date,
                 "start_time": appt.start_time,
                 "end_time": appt.end_time,
+                "event_id": appt.event_id,
                 "status": appt.status,
                 "notes": appt.notes,
                 "physical_location": appt.physical_location,
                 "meeting_url": appt.meeting_url,
-                "attendee": attendee_info
+                "attendee": attendee_info,
             })
 
         return jsonify(instructor_appointments=instructor_appointments), 200

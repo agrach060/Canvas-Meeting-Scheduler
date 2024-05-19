@@ -154,19 +154,25 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // called when a student clicks to reserve an appointment
   // after fetch, update page
   const bookAppointment = () => {
-    // user isn't an student
     if (isnt_Student(user)) return;
 
-    // if there is a timeslot to post
     if (selectedTimeslot) {
+      const { startTime, endTime } = selectedTimeslot.availableTimeslot;
       const appointmentID = selectedTimeslot.availableTimeslot.id;
 
       const appointmentData = {
         notes: appointmentNotes,
+        summary: `${selectedCourseData.course_name} - ${selectedCourseData.programs.find(
+          (name) => name.id === selectedProgramId
+        )?.name}`,
+        start: startTime.toISOString(),
+        end: endTime.toISOString(),
+        attendees: [user.email],
+        colorId: '11',
       };
 
       const csrfToken = getCookie("csrf_access_token");
-      let isHandledError = false; // flag to indicate if the error has been handled
+      let isHandledError = false;
 
       fetch(
         `/student/appointments/reserve/${encodeURIComponent(
@@ -200,10 +206,33 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           if (data) {
             setAppointmentStatus(data.status);
             setBookingConfirmed(true);
-
-            // reload page
-            functions.reloadAppointments();
+            return fetch('http://localhost:5000/api/create_event', {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                "X-CSRF-TOKEN": csrfToken,
+              },
+              body: JSON.stringify(appointmentData),
+            });
           }
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          const eventId = data.event_id;
+          return fetch(`/student/appointments/update_event_id/${encodeURIComponent(appointmentID)}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              "X-CSRF-TOKEN": csrfToken,
+            },
+            body: JSON.stringify({ event_id: eventId }),
+          });
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          functions.reloadAppointments();
         })
         .catch((error) => {
           if (!isHandledError) {
@@ -217,6 +246,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         });
     }
   };
+
 
   ////////////////////////////////////////////////////////
   //                 Handler Functions                  //
@@ -324,6 +354,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
       setSelectedCourseData(selectedCourse);
     }
   };
+
 
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //

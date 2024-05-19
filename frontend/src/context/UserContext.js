@@ -9,14 +9,27 @@
  *
  */
 
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 
 // Context Variables
 export const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
   // User Data Variables
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Load the user from local storage
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  useEffect(() => {
+    // Save the user to local storage whenever it changes
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [user]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //

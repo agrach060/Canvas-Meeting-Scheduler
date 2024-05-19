@@ -22,9 +22,10 @@ class User(db.Model):
     name = db.Column(db.String(150))
     pronouns = db.Column(db.String(150))
     discord_id = db.Column(db.String(255))
+    calendar_type = db.Column(db.String(50)) # Google, Canvas, Outlook
     calendar_link = db.Column(db.String(255))
     availabilities = db.relationship('Availability')
-    appointment_comment = db.relationship('AppointmentComment', backref='user', cascade='all, delete-orphan')
+    appointment_comment = db.relationship('AppointmentComment', backref='user', cascade='all, delete-orphan') 
 
 class CourseDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -101,6 +102,9 @@ class Appointment(db.Model):
     appointment_date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
+    ##############
+    event_id = db.Column(db.String(255))
+    #############
     physical_location = db.Column(db.String(255))
     meeting_url = db.Column(db.String(255))
     notes = db.Column(db.Text)

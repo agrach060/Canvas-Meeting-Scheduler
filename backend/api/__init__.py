@@ -18,6 +18,7 @@ from werkzeug.security import generate_password_hash
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
+from flask_session import Session
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -28,6 +29,10 @@ def create_app():
     # Allow requests from localhost (React app during development)
     CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+    app.config['SESSION_TYPE'] = 'filesystem'
+
+    Session(app)
+    CORS(app, supports_credentials=True)
 
     from .auth import auth
     from .admin import admin
@@ -37,6 +42,7 @@ def create_app():
     from .feedback import feedback
     from .models import User
     from .user import user
+    from .calendars.google_calendar import google_calendar_bp 
     
     ##create MySQL database##    
     load_dotenv()
@@ -62,6 +68,7 @@ def create_app():
     app.register_blueprint(programs, url_prefix='/')
     app.register_blueprint(feedback, url_prefix='/')
     app.register_blueprint(user, url_prefix='/')
+    app.register_blueprint(google_calendar_bp, url_prefix='/api')
     
     with app.app_context():
         db.create_all()

@@ -11,7 +11,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import GoogleSignInButton from "./GoogleSignInButton";
 
 export default function Login() {
   // General Variables
@@ -60,8 +59,12 @@ export default function Login() {
 
       // set user based on user profile
       setUser(userProfile);
+      localStorage.setItem("user", JSON.stringify(userProfile)); // Persist user in local storage
       navigate(`/${userProfile.account_type}`); // navigate to appropriate webpage view based on account type
-    } catch (error) { }
+    } catch (error) {
+      console.error("Login error:", error);
+      setLoginError("An error occurred during login. Please try again.");
+    }
   };
 
   ////////////////////////////////////////////////////////
@@ -131,8 +134,6 @@ export default function Login() {
 
           {/* Link user to Register tab if they're not signed up to use Canvas Meetig Scheduler */}
           <strong className="p-5 text-center">OR</strong>
-          {/* GOOGLE SIGN IN */}
-          <GoogleSignInButton clearError={() => setLoginError('')} />
           <div className="p-1 text-center">
             New user?{" "}
             <Link to="/registerform">

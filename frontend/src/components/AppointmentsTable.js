@@ -312,6 +312,13 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           setActiveTab("upcoming");
           setSelectedAppointment(null); // Deselect the appointment as it is now cancelled
           fetchAppointments(); // Re-fetch appointments to update the list
+
+          // delete appointment from Google Calendar
+          const eventId = selectedAppointment.event_id;
+          await fetch(`http://localhost:5000/api/delete_event/${eventId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
         } else {
           throw new Error("Failed to cancel the appointment");
         }
@@ -559,6 +566,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       return null;
     }
 
+    const eventId = selectedAppointment.event_id;
     // HTML for webpage
     return (
       // Define AppointmentDetails popup dimensions, color, and position for display
@@ -589,16 +597,16 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {((user.account_type === "student" && activeTab !== "past") ||
               (user.account_type === "instructor" &&
                 activeTab === "upcoming")) && (
-              // Cancel Appointment button
-              <button
-                className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                onClick={() =>
-                  handleCancelAppointment(selectedAppointment.appointment_id)
-                }
-              >
-                Cancel Appointment
-              </button>
-            )}
+                // Cancel Appointment button
+                <button
+                  className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
+                  onClick={() =>
+                    handleCancelAppointment(selectedAppointment.appointment_id, eventId)
+                  }
+                >
+                  Cancel Appointment
+                </button>
+              )}
 
             {/* Instructor can approve or cancel appointment */}
             {user.account_type === "instructor" && activeTab === "pending" && (
@@ -622,7 +630,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
                   onClick={() =>
-                    handleCancelAppointment(selectedAppointment.appointment_id)
+                    handleCancelAppointment(selectedAppointment.appointment_id, eventId)
                   }
                 >
                   Cancel Appointment
@@ -744,11 +752,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
                 {/* Your Appointment URL input field for instructors to change */}
                 <input
-                  className={`w-full ${
-                    user.account_type !== "instructor"
-                      ? ""
-                      : "border border-light-gray bg-gray"
-                  }`}
+                  className={`w-full ${user.account_type !== "instructor"
+                    ? ""
+                    : "border border-light-gray bg-gray"
+                    }`}
                   type="text"
                   name="meeting_url"
                   value={formData.meeting_url}
@@ -774,9 +781,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
           {/* Appointment Notes text area */}
           <textarea
-            className={`w-full h-20 ${
-              user.account_type !== "student" ? "" : "border border-light-gray"
-            }`}
+            className={`w-full h-20 ${user.account_type !== "student" ? "" : "border border-light-gray"
+              }`}
             name="notes"
             value={formData.notes}
             onChange={handleInputChange}
@@ -833,7 +839,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
         {/* Comment box for students and instructor to type into */}
         <Comment appointmentId={selectedAppointment.appointment_id} />
-      </div>
+      </div >
     );
   };
 
@@ -918,9 +924,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
                     {/* Date header */}
                     <th
-                      className={`border-r w-12% hover:bg-gold ${
-                        hoveringDateOrTime ? "bg-gold" : ""
-                      }`}
+                      className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? "bg-gold" : ""
+                        }`}
                       onClick={() => sortBy("Date")}
                       onMouseEnter={() => setHoveringDateOrTime(true)}
                       onMouseLeave={() => setHoveringDateOrTime(false)}
@@ -930,9 +935,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
                     {/* Time header */}
                     <th
-                      className={`border-r w-12% hover:bg-gold ${
-                        hoveringDateOrTime ? "bg-gold" : ""
-                      }`}
+                      className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? "bg-gold" : ""
+                        }`}
                       onClick={() => sortBy("Date")}
                       onMouseEnter={() => setHoveringDateOrTime(true)}
                       onMouseLeave={() => setHoveringDateOrTime(false)}
@@ -994,8 +998,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                         <td className="border-r">
                           {appointment.start_time && appointment.end_time
                             ? `${formatTime(
-                                appointment.start_time
-                              )} - ${formatTime(appointment.end_time)}`
+                              appointment.start_time
+                            )} - ${formatTime(appointment.end_time)}`
                             : "-------"}
                         </td>
 
