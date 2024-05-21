@@ -7,6 +7,9 @@ from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
+from dateutil import parser
+from datetime import timedelta
+import pytz
 
 # Set environment variable to allow OAuth2 insecure transport (HTTP instead of HTTPS)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -68,7 +71,25 @@ class GoogleCalendarService:
             raise Exception(f"HttpError: {http_err}")
         except Exception as e:
             raise Exception(f"Error: {str(e)}")
-        
+
+    # Return events that are within a specified time range
+    def get_events_in_time_range(self, start_time, end_time):
+        try:
+            # google service instance
+            service = self.get_calendar_service()
+            # make a request to the Google Calendar API to fetch events in the specified time range
+            events_result = service.events().list(
+                calendarId='primary', timeMin=start_time, timeMax=end_time,
+                singleEvents=True, orderBy='startTime'
+            ).execute()
+            # extract the list of events from the API response
+            events = events_result.get('items', [])
+            return events
+        except HttpError as http_err:
+            raise Exception(f"HttpError: {http_err}")
+        except Exception as e:
+            raise Exception(f"Error: {str(e)}")
+    
     # Create a new event in the user's primary calendar    
     def create_event(self, event_details):
         try:
@@ -223,6 +244,66 @@ def delete_event(event_id):
         return jsonify({'error': 'Failed to delete event', 'details': str(http_err)}), 500
     except Exception as e:
         print(f"Error: {str(e)}")
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+    
+# Make sure there are no coflicts with the user's Google Calendar events when making an appointment 
+@google_calendar_bp.route('/check_conflicts', methods=['POST'])
+def check_conflicts():
+    # check if credentials are in the session
+    if 'credentials' not in session:
+        return jsonify({'error': 'Missing credentials'}), 401
+
+    try:
+        # retrieve the JSON data from the request
+        data = request.json        
+        start_time_str = data.get('start_time')
+        end_time_str = data.get('end_time')
+        
+        # validate the presence of start and end times in the request data
+        if not start_time_str or not end_time_str:
+            return jsonify({'error': 'Start time and end time are required'}), 400
+        
+        # convert the start_time and end_time from ISO format to datetime objects
+        try:
+            start_time = parser.isoparse(start_time_str).astimezone(pytz.utc)
+            end_time = parser.isoparse(end_time_str).astimezone(pytz.utc)
+        except Exception as e:
+            print("Error in datetime conversion:", str(e))
+            return jsonify({'error': 'Invalid datetime format'}), 400
+        
+        # manually add 7 hours to the times to correct the time
+        start_time += timedelta(hours=7)
+        end_time += timedelta(hours=7)
+
+        # adjust to local time zone if necessary
+        local_tz = pytz.timezone('America/Los_Angeles')
+        start_time = start_time.astimezone(local_tz)
+        end_time = end_time.astimezone(local_tz)
+
+        # get events in the specified time range from Google Calendar
+        events = google_calendar_service.get_events_in_time_range(start_time.isoformat(), end_time.isoformat())
+        print("Events retrieved from Google Calendar:", events)
+        
+        # check if there are any events that overlap with the appointment time
+        conflicts = []
+        for event in events:
+            # ignore all-day events
+            if 'dateTime' in event['start'] and 'dateTime' in event['end']:
+                event_start = parser.isoparse(event['start']['dateTime'])
+                event_end = parser.isoparse(event['end']['dateTime'])
+                
+                # ensure event times are in UTC
+                event_start = event_start.astimezone(pytz.utc)
+                event_end = event_end.astimezone(pytz.utc)
+                
+                # check if the event overlaps with the specified time range
+                if event_start < end_time and event_end > start_time:
+                    conflicts.append(event)
+
+        return jsonify({'conflicts': conflicts}), 200
+    except HttpError as http_err:
+        return jsonify({'error': 'Failed to fetch events', 'details': str(http_err)}), 500
+    except Exception as e:
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
     
 # clear the session credentials

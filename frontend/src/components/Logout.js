@@ -35,6 +35,7 @@ const Logout = () => {
 
         if (response.ok) {
           setUser(null);
+          localStorage.removeItem("user"); // clear local storage
           // log out from Google OAuth2
           const googleResponse = await fetch("/api/logout", {
             method: "POST",

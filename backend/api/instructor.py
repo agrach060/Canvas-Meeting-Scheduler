@@ -240,7 +240,6 @@ def generate_appointments(instructor_id, date, start_time, end_time, physical_lo
                 start_datetime=datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M"),
                 end_datetime=datetime.strptime(f"{date} {end_time}", "%Y-%m-%d %H:%M")
             )
-            print("Single appointment event created with event ID:", event_id)
             new_appointment = Appointment(
                 host_id=instructor_id,
                 appointment_date=date,

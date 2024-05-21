@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie.js";
 import Appointment from "./Appointment.js";
 import { isnt_Student } from "../utils/CheckUserType.js";
+import { toDate, formatInTimeZone } from 'date-fns-tz';
 
 const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // General Variables
@@ -151,22 +152,77 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
+  const checkForConflicts = async (startTime, endTime) => {
+    try {
+      // retrieve the CSRF token
+      const csrfToken = getCookie("csrf_access_token");
+
+      // subtract 7 hours from the start and end times
+      const adjustedStartTime = new Date(startTime);
+      adjustedStartTime.setHours(adjustedStartTime.getHours() - 7);
+
+      const adjustedEndTime = new Date(endTime);
+      adjustedEndTime.setHours(adjustedEndTime.getHours() - 7);
+
+      // convert the local time to UTC time before sending to the server
+      const startTimeUtc = formatInTimeZone(toDate(adjustedStartTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+      const endTimeUtc = formatInTimeZone(toDate(adjustedEndTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+      // API request to check for conflicts within the specified time range
+      const response = await fetch('http://localhost:5000/api/check_conflicts', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ start_time: startTimeUtc, end_time: endTimeUtc }),
+      });
+
+      // check the response
+      if (!response.ok) {
+        throw new Error("Failed to fetch conflicts");
+      }
+
+      // parse the JSON response from the server
+      const data = await response.json();
+      console.log("Conflict check response:", data);
+      // return the list of conflicts if any, or an empty array if none
+      return data.conflicts || [];
+    } catch (error) {
+      console.error("Error fetching conflicts:", error);
+      return [];
+    }
+  };
+
+
   // called when a student clicks to reserve an appointment
   // after fetch, update page
-  const bookAppointment = () => {
+  const bookAppointment = async () => {
     if (isnt_Student(user)) return;
 
     if (selectedTimeslot) {
       const { startTime, endTime } = selectedTimeslot.availableTimeslot;
       const appointmentID = selectedTimeslot.availableTimeslot.id;
 
+      // check if there are any conflicts with the user's Google Calendar events
+      const conflicts = await checkForConflicts(startTime, endTime);
+      if (!conflicts) {
+        throw new Error("Failed to fetch conflicts data.");
+      }
+
+      if (conflicts.length > 0) {
+        alert("There is a conflict with your Google Calendar events.");
+        return;
+      }
+
       const appointmentData = {
         notes: appointmentNotes,
         summary: `${selectedCourseData.course_name} - ${selectedCourseData.programs.find(
           (name) => name.id === selectedProgramId
         )?.name}`,
-        start: startTime.toISOString(),
-        end: endTime.toISOString(),
+        start: formatInTimeZone(toDate(startTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"),
+        end: formatInTimeZone(toDate(endTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"),
         attendees: [user.email],
         colorId: '11',
       };
