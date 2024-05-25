@@ -30,6 +30,7 @@ class User(db.Model):
 class CourseDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    instructor = db.relationship('User', backref='courses')
     quarter = db.Column(db.String(50))
     name = db.Column(db.String(255))
     physical_location = db.Column(db.String(255))
@@ -102,9 +103,7 @@ class Appointment(db.Model):
     appointment_date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
-    ##############
     event_id = db.Column(db.String(255))
-    #############
     physical_location = db.Column(db.String(255))
     meeting_url = db.Column(db.String(255))
     notes = db.Column(db.Text)

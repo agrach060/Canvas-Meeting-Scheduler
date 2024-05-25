@@ -148,6 +148,23 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProgramId, selectedCourseId]);
 
+  // get instructor's email from the course table
+  const fetchInstructorEmail = async (courseId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/course/instructor/${courseId}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Error fetching instructor email: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.instructor_email;
+    } catch (error) {
+      console.error("Error fetching instructor email:", error);
+      return null;
+    }
+  };
+
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
@@ -216,6 +233,13 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         return;
       }
 
+      // Fetch the instructor's email
+      const instructorEmail = await fetchInstructorEmail(selectedCourseId);
+      if (!instructorEmail) {
+        alert("Failed to fetch instructor email.");
+        return;
+      }
+
       const appointmentData = {
         notes: appointmentNotes,
         summary: `${selectedCourseData.course_name} - ${selectedCourseData.programs.find(
@@ -223,7 +247,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         )?.name}`,
         start: formatInTimeZone(toDate(startTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"),
         end: formatInTimeZone(toDate(endTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"),
-        attendees: [user.email],
+        attendees: [user.email, instructorEmail],
         colorId: '11',
       };
 

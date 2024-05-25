@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from dateutil import parser
 from datetime import timedelta
 import pytz
+from ..models import CourseDetails
 
 # Set environment variable to allow OAuth2 insecure transport (HTTP instead of HTTPS)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -305,6 +306,15 @@ def check_conflicts():
         return jsonify({'error': 'Failed to fetch events', 'details': str(http_err)}), 500
     except Exception as e:
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+
+# Get instructor's email to create an appointment on their Google Calendar    
+@google_calendar_bp.route('/course/instructor/<int:course_id>', methods=['GET'])
+def get_instructor_email(course_id):
+    course = CourseDetails.query.get(course_id)
+    if not course or not course.instructor:
+        return jsonify({'error': 'Instructor not found'}), 404
+
+    return jsonify({'instructor_email': course.instructor.email}), 200
     
 # clear the session credentials
 @google_calendar_bp.route('/logout', methods=['POST'])
