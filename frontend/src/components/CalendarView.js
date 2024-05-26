@@ -32,12 +32,14 @@ function CalendarView() {
         const { summary, start, end, id, extendedProperties } = event;
 
         let startDate, endDate;
+        let allDay = false;
 
         if (start.date) {
           // All-day event
           // add 1 day to make it a correct date. Without it events are shifted one day early
           startDate = moment.utc(start.date).add(1, 'days').toDate();
           endDate = moment.utc(end.date).toDate();
+          allDay = true;
         } else {
           // Timed event
           startDate = moment(start.dateTime).toDate();
@@ -48,6 +50,7 @@ function CalendarView() {
           title: summary,
           start: startDate,
           end: endDate,
+          allDay: allDay,
           isGoogleEvent: extendedProperties?.private?.isGoogleEvent === 'true'
         };
       });
