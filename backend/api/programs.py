@@ -216,13 +216,18 @@ def get_programs(course_id):
         if course:
             programs = ProgramDetails.query.filter(and_(or_(ProgramDetails.course_id==course_id, ProgramDetails.course_id==None), ProgramDetails.instructor_id==course.instructor_id)).all()
 
-            # return the id, name, description, and duration of each program
-            return jsonify([{
-                "id": program.id,
-                "name": program.name,
-                "description": program.description,
-                "duration": program.duration
-            } for program in programs]), 200
+            # return the id, name, description, duration, and instructor_id of each program
+            response = {
+                'instructor_id': course.instructor_id,
+                'programs': [{
+                    "id": program.id,
+                    "name": program.name,
+                    "description": program.description,
+                    "duration": program.duration
+                } for program in programs]
+            }
+
+            return jsonify(response), 200
         else:
             return jsonify({"error": "Course not found"}), 404
     except Exception as e:

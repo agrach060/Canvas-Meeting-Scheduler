@@ -30,6 +30,7 @@ class User(db.Model):
 class CourseDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    instructor_email = db.Column(db.String(255), nullable=False)
     instructor = db.relationship('User', backref='courses')
     quarter = db.Column(db.String(50))
     name = db.Column(db.String(255))
@@ -39,6 +40,7 @@ class CourseDetails(db.Model):
     discord_link = db.Column(db.String(255))
     comments = db.Column(db.Text)
     times = db.relationship("CourseTimes", back_populates="course_details")
+    google_credentials = db.Column(db.JSON, nullable=True)
 
 class CourseTimes(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

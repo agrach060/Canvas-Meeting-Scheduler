@@ -88,12 +88,18 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
       );
       const fetchedData = await response.json();
 
-      const programDetails = fetchedData.map((program) => ({
+      const instructorId = fetchedData.instructor_id;
+
+      const programDetails = fetchedData.programs.map((program) => ({
         id: program.id,
         description: program.description,
       }));
 
       setProgramDescriptions(programDetails);
+      setSelectedCourseData(prevData => ({
+        ...prevData,
+        instructorId: instructorId
+      }));
     } catch (error) {
       console.error("Error fetching program details:", error);
     }
@@ -169,7 +175,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  const checkForConflicts = async (startTime, endTime) => {
+  const checkForConflicts = async (startTime, endTime, instructorId) => {
     try {
       // retrieve the CSRF token
       const csrfToken = getCookie("csrf_access_token");
@@ -193,7 +199,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify({ start_time: startTimeUtc, end_time: endTimeUtc }),
+        body: JSON.stringify({ start_time: startTimeUtc, end_time: endTimeUtc, instructor_id: instructorId }),
       });
 
       // check the response
@@ -221,9 +227,10 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     if (selectedTimeslot) {
       const { startTime, endTime } = selectedTimeslot.availableTimeslot;
       const appointmentID = selectedTimeslot.availableTimeslot.id;
+      const instructorId = selectedCourseData.instructorId;
 
       // check if there are any conflicts with the user's Google Calendar events
-      const conflicts = await checkForConflicts(startTime, endTime);
+      const conflicts = await checkForConflicts(startTime, endTime, instructorId);
       if (!conflicts) {
         throw new Error("Failed to fetch conflicts data.");
       }
