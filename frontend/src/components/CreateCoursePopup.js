@@ -16,7 +16,7 @@ import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   // General Variables
-  const csrfToken = getCookie("csrf_access_token");
+  // const csrfToken = getCookie("csrf_access_token");
   const { user } = useContext(UserContext);
 
   // Load Variables
@@ -24,10 +24,34 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
 
   // course Data Variables
   const [courseTitle, setCourseTitle] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [allStudents, setAllStudents] = useState([])
+  const [csrfToken, setCsrfToken] = useState("");
+
 
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
+
+  const fetchAllStudents = async () => {
+    try {
+      const response = await fetch("/students", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken,  // Include CSRF token if needed
+        },
+        credentials: "include",  // Include credentials for cookies
+      });
+      if (!response.ok) {
+        throw new Error("Error fetching students");
+      }
+      const data = await response.json();
+      setAllStudents(data);  // Assuming the response is an array of students
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   // posts the course to the CourseDetails Table
   const createCourse = async () => {
@@ -38,6 +62,8 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
       const payload = {
         name: courseTitle,
         user_id: user_id,
+        instructor_email: user.email,
+        student_ids: selectedStudentIds
       };
 
       const response = await fetch(`/course/create`, {
@@ -61,6 +87,16 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   };
 
   ////////////////////////////////////////////////////////
+  //               Handler Functions                    //
+  ////////////////////////////////////////////////////////
+  // Handle student selection
+  const handleStudentSelection = (event) => {
+    const selectedOptions = Array.from(event.target.selectedOptions);
+    const selectedIds = selectedOptions.map(option => option.value);
+    setSelectedStudentIds(selectedIds);
+  };
+
+  ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
@@ -72,6 +108,12 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
       setReadyToCreate(false);
     }
   }, [courseTitle]);
+
+  useEffect(() => {
+    setCsrfToken(getCookie("csrfToken"));
+    // Fetch all students
+    fetchAllStudents();
+  }, []);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -103,6 +145,18 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
           />
         </div>
       </div>
+
+      <div className="flex flex-col items-center mt-3">
+        <label className="font-bold text-lg">Select Students</label>
+        <select multiple className="border border-light-gray rounded ml-2 mt-1 w-full" onChange={handleStudentSelection}>
+          {allStudents.map(student => (
+            <option key={student.id} value={student.id}>
+              {student.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
 
       {/* Once instructor enters Course name, the create button shows*/}
       {readyToCreate && (

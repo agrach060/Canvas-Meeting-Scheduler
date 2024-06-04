@@ -241,9 +241,8 @@ export default function Courses() {
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           {/* Schedule New Appointment Button */}
           <button
-            className={`bg-purple p-2 rounded-md text-white ${
-              coursesFound ? "hover:text-gold" : "opacity-50"
-            }`}
+            className={`bg-purple p-2 rounded-md text-white ${coursesFound ? "hover:text-gold" : "opacity-50"
+              }`}
             onClick={() =>
               setScheduleAppointmentPopUpVisible(
                 !isScheduleAppointmentPopUpVisible

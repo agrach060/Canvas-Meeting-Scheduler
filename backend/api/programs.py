@@ -501,17 +501,28 @@ def create_course():
         data = request.get_json()
         name = data.get('name')
         user_id = data.get('user_id')
+        instructor_email = data.get('instructor_email')
+        student_ids = data.get('student_ids', [])
 
         if not user_id:
             return jsonify({"error": "Instructor ID is missing."}), 404
         
         if not name:
             return jsonify({"error": "Course Name is missing."}), 404
+        
+        if not instructor_email:
+            return jsonify({"error": "Instructor email is missing."}), 404
+        
+        print(f"Creating course: {name}")
+        print(f"Instructor ID: {user_id}")
+        print(f"Instructor Email: {instructor_email}")
+        print(f"Student IDs: {student_ids}")
 
         # create a new tuple for CourseDetails
         new_course = CourseDetails(
             instructor_id=user_id,
             name=name,
+            instructor_email=instructor_email
         )
 
         # post to the database
@@ -528,6 +539,15 @@ def create_course():
 
         # post to the database
         db.session.add(new_member)
+        # Add each student to the course in the CourseMembers table
+        for student_id in student_ids:
+            print(f"Adding student ID: {student_id} to course ID: {new_course_id}")
+            new_student_member = CourseMembers(
+                course_id=new_course_id,
+                user_id=student_id,
+            )
+            db.session.add(new_student_member)
+
         db.session.commit()
 
         return jsonify({"message": "Course created successfully"}), 200
@@ -563,4 +583,15 @@ def add_user_to_course():
             return jsonify({"error": "Insufficient details to add user to course"}), 404
     except Exception as e:
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# fetch all students so that they can be selected when creating a course
+@programs.route('/students', methods=['GET'])
+@jwt_required()
+def get_all_students():
+    try:
+        students = User.query.filter_by(account_type='student').all()
+        students_list = [{'id': student.id, 'name': student.name} for student in students]
+        return jsonify(students_list), 200
+    except Exception as e:
         return jsonify({"error": str(e)}), 500

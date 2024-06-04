@@ -12,7 +12,6 @@ from datetime import timedelta
 import pytz
 from ..models import db, User, CourseDetails
 import jwt
-from google.auth.transport.requests import Request
 
 # Set environment variable to allow OAuth2 insecure transport (HTTP instead of HTTPS)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'

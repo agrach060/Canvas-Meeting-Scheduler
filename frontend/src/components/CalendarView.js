@@ -56,6 +56,7 @@ function CalendarView() {
       });
       // update the state with the formatted events
       setEvents(formattedEvents);
+      console.log('Formatted Events:', formattedEvents);
       // set authentication status to true
       setIsAuthenticated(true);
     } catch (error) {

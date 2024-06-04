@@ -192,10 +192,12 @@ def add_instructor_availability(course_id, instructor_id, data, physical_locatio
         # Validate the data
         validation_result = validate_availability_data(instructor_id, course_id, program_id, date, start_time, end_time, isDropins)
         if validation_result:
+            print(f"Validation Result: {validation_result}")
             return validation_result
         
         # Check if the same availability already exists for the instructor
         if is_existing_availability(instructor_id, program_id, date, start_time, end_time):
+            print(f"Existing Availability Found: {instructor_id}, {program_id}, {date}, {start_time}, {end_time}")
             return jsonify({"error": "availability time conflict or it already exists for this instructor"}), 400
         
         current_time = datetime.now() - timedelta(hours=8)
@@ -212,6 +214,8 @@ def add_instructor_availability(course_id, instructor_id, data, physical_locatio
             )
             db.session.add(new_availability) 
             db.session.commit()
+
+            print(f"New availability added: {new_availability}")
             
             # Generate appointment events
             if not isDropins:
@@ -229,57 +233,30 @@ def generate_appointments(instructor_id, date, start_time, end_time, physical_lo
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
 
-        google_calendar_service = GoogleCalendarService()
+        while start_datetime < end_datetime:
+            event_end_datetime = start_datetime + timedelta(minutes=duration) if duration else end_datetime
 
-
-        if duration == 0 or not duration:
-            event_id = google_calendar_service.create_event(
-                summary="Appointment",
-                location=physical_location,
-                description=meeting_url,
-                start_datetime=datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M"),
-                end_datetime=datetime.strptime(f"{date} {end_time}", "%Y-%m-%d %H:%M")
-            )
             new_appointment = Appointment(
                 host_id=instructor_id,
                 appointment_date=date,
                 start_time=start_datetime.strftime("%H:%M"),
-                end_time=end_datetime.strftime("%H:%M"),
+                end_time=event_end_datetime.strftime("%H:%M"),
                 status="posted",
                 physical_location=physical_location,
                 meeting_url=meeting_url,
                 availability_id=availability_id,
-                event_id=event_id
+                event_id=None  # No Google Calendar event created yet
             )
             db.session.add(new_appointment)
-        else:
-            while start_datetime + timedelta(minutes=duration) <= end_datetime:
-                event_id = google_calendar_service.create_event(
-                    summary="Appointment",
-                    location=physical_location,
-                    description=meeting_url,
-                    start_datetime=start_datetime,
-                    end_datetime=start_datetime + timedelta(minutes=duration)
-                )
-                print("Recurring appointment event created with event ID:", event_id)
-                new_appointment = Appointment(
-                    host_id=instructor_id,
-                    appointment_date=date,
-                    start_time=start_datetime.strftime("%H:%M"),
-                    end_time=(start_datetime + timedelta(minutes=duration)).strftime("%H:%M"),
-                    status="posted",
-                    physical_location=physical_location,
-                    meeting_url=meeting_url,
-                    availability_id=availability_id,
-                    event_id=event_id
-                )
-                start_datetime += timedelta(minutes=duration)
-                db.session.add(new_appointment)
+            start_datetime = event_end_datetime  # Move to next time slot
         
         db.session.commit()
+        print("Appointments generated successfully")
+        return jsonify({"message": "appointments generated successfully"}), 201
     
     except Exception as e:
         db.session.rollback()
+        print(f"Error in generate_appointments: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -653,6 +630,7 @@ def get_instructor_availabilities(course_id):
 def post_instructor_availabilities(course_id):
     try:
         user_id = get_jwt_identity()
+        print(f"User ID: {user_id}, Course ID: {course_id}")
         
         if is_instructor(user_id):
             data = request.get_json()
@@ -677,8 +655,8 @@ def post_instructor_availabilities(course_id):
 
             # add availabilities to the Availability Table
             for availabilityEntry in allAvailabilties:
-                add_instructor_availability(course_id, user_id, availabilityEntry, physical_location, meeting_url, duration, isDropins)
-
+                result = add_instructor_availability(course_id, user_id, availabilityEntry, physical_location, meeting_url, duration, isDropins)
+                print(f"Result of adding availability: {result}")
             return jsonify({"message": "all availability added successfully"}), 201
         else:
             return jsonify({"error": "Instructor not found"}), 404

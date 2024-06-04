@@ -635,11 +635,10 @@ export default function ProgramDetails() {
         <div className="flex w-full cursor-pointer justify-center">
           {/* Left Half of Course Program Bar where instructor can select All Course Programs */}
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
-              isAllCoursesSelected
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${isAllCoursesSelected
                 ? "bg-gold border-gold"
                 : "bg-metallic-gold border-metallic-gold"
-            }`}
+              }`}
             onClick={() => {
               if (!isAllCoursesSelected) {
                 tabSelect(true);
@@ -651,11 +650,10 @@ export default function ProgramDetails() {
 
           {/* Right Half of Course Program Bar where instructor can select Single Course Programs */}
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 ${
-              isAllCoursesSelected
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 ${isAllCoursesSelected
                 ? "bg-metallic-gold border-metallic-gold hover:border-green"
                 : "bg-gold border-gold hover:border-green"
-            }`}
+              }`}
             onClick={() => {
               if (isAllCoursesSelected) {
                 tabSelect(false);
@@ -674,11 +672,10 @@ export default function ProgramDetails() {
               {!isAllCoursesSelected && (
                 // UI guide for instructor to select or create a Course
                 <div
-                  className={`flex ${
-                    !isCourseSelected
+                  className={`flex ${!isCourseSelected
                       ? "animate-blink flex border-4 border-white p-4 rounded-3xl"
                       : "p-5"
-                  }`}
+                    }`}
                 >
                   {/* Course header */}
                   <h1>
@@ -722,11 +719,10 @@ export default function ProgramDetails() {
 
             {/* UI guide for instructor to select or create a Course */}
             <div
-              className={`flex items-center mr-10 ${
-                isCourseSelected && !isProgramSelected
+              className={`flex items-center mr-10 ${isCourseSelected && !isProgramSelected
                   ? "animate-blink border-4 border-white p-4 rounded-3xl"
                   : "p-5"
-              }`}
+                }`}
             >
               {/* Program header */}
               <h1>
@@ -764,9 +760,8 @@ export default function ProgramDetails() {
 
               {/* Create Program button for instructors to create new Programs */}
               <button
-                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray ${
-                  !isCourseSelected ? "opacity-50" : ""
-                }`}
+                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray ${!isCourseSelected ? "opacity-50" : ""
+                  }`}
                 onClick={() => setCreateProgramPopup(!isCreateProgramPopup)}
                 disabled={!isCourseSelected}
               >
@@ -838,11 +833,10 @@ export default function ProgramDetails() {
                           <input
                             className="text-center font-bold text-2xl px-2"
                             style={{
-                              width: `${
-                                selectedProgramData.name
+                              width: `${selectedProgramData.name
                                   ? selectedProgramData.name.length * 18
                                   : ""
-                              }px`,
+                                }px`,
                             }}
                             name="name"
                             value={selectedProgramData.name}
@@ -951,7 +945,7 @@ export default function ProgramDetails() {
                                       }}
                                       times={
                                         allProgramTimesInCourse[
-                                          selectedProgramId
+                                        selectedProgramId
                                         ]
                                       }
                                       loadPage={loadProgramTimesTable}

@@ -25,6 +25,7 @@ from .mail import send_email
 from .programs import get_program_name, get_course_name
 from .user import is_student, is_instructor
 from ics import Calendar, Event
+from .calendars.google_calendar import GoogleCalendarService
 
 student = Blueprint('student', __name__)
 
@@ -519,8 +520,9 @@ def get_appointment_programs():
 @jwt_required()
 def get_available_appointments(program_id, course_id):
     try:
+        print(f"Fetching appointments for program_id: {program_id}, course_id: {course_id}")
         student_id = get_jwt_identity()
-
+        print("student_id = ", student_id)
         if not is_student(student_id):
             return jsonify({"error": "Student not found"}), 404
         
@@ -558,7 +560,7 @@ def get_available_appointments(program_id, course_id):
 
                 # append object to list
                 available_appointments.append(appointment_data)
-                    
+            print(f"Available appointments: {available_appointments}")   
             return jsonify({"available_appointments": available_appointments})
         else:
             return jsonify({"error": "Program not found"}), 404
@@ -644,6 +646,27 @@ def reserve_appointment(appointment_id, course_id):
         if (not instructor_limits) or (daily_count < instructor_limits.max_daily_meetings and \
             weekly_count < instructor_limits.max_weekly_meetings and monthly_count < instructor_limits.max_monthly_meetings):
             try:
+                
+                # print(f"Student email: {student.email}")
+                # # Get the instructor email
+                # instructor = User.query.get(appointment.host_id)
+                # if not instructor:
+                #     return jsonify({"error": "Instructor not found"}), 400
+                # print(f"Instructor email: {instructor.email}")
+                # # Create the Google Calendar event
+                # google_calendar_service = GoogleCalendarService()
+                # event_details = {
+                #     'summary': 'Appointment',
+                #     'description': appointment.meeting_url,
+                #     'start': f"{appointment.appointment_date}T{appointment.start_time}:00",
+                #     'end': f"{appointment.appointment_date}T{appointment.end_time}:00",
+                #     'timeZone': 'America/Los_Angeles',
+                #     'attendees': [{'email': student.email}, {'email': instructor.email}],  # Add the student as an attendee
+                # }
+                # print(f"Event details: {event_details}")
+                # event_id = google_calendar_service.create_event(event_details)
+                # print(f"Created Google Calendar event with ID: {event_id}")
+
                 appointment.attendee_id = student_id
                 appointment.course_id = course_id
                 appointment.notes = data.get('notes', None)
