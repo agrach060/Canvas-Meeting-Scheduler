@@ -1,27 +1,29 @@
-import os
-import datetime
-from flask import Blueprint, request, redirect, session, jsonify
-from flask_cors import CORS
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
-from googleapiclient.errors import HttpError
-from dotenv import load_dotenv
-from dateutil import parser
-from datetime import timedelta
-import pytz
-from ..models import db, User, CourseDetails
-import jwt
+import os # interact with operating system
+import datetime # handle date and time operations
+from flask import Blueprint, request, redirect, session, jsonify # Flask web framework components
+from flask_cors import CORS # Cross-Origin Resource Sharing
+from google_auth_oauthlib.flow import Flow # manage OAuth2 authorization flow
+from googleapiclient.discovery import build # access Google APIs
+from google.oauth2.credentials import Credentials # handle OAuth2 credentials
+from googleapiclient.errors import HttpError # handle API errors
+from dotenv import load_dotenv # load environment variables from a .env file
+from dateutil import parser # parse date strings into datetime objects
+from datetime import timedelta 
+import pytz # handle time zones
+from ..models import db, User, CourseDetails # import database models
+import jwt # handle JSON Web Tokens
 
 # Set environment variable to allow OAuth2 insecure transport (HTTP instead of HTTPS)
+# For testing purposes only, can be deleted after deployment
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 load_dotenv()
 
 # Create a Blueprint for the Google Calendar API
 google_calendar_bp = Blueprint('google_calendar_bp', __name__)
+# Enable CORS with credentials support
 CORS(google_calendar_bp, supports_credentials=True)
 
-# Path to credentials file
+# Define a path to credentials file
 credentials_path = os.path.join(os.path.dirname(__file__), '..', '..', 'credentials.json')
 
 # Google Calendar Service class to handle all calendar-related operations
