@@ -1,4 +1,5 @@
 {
+  "proxy": "http://127.0.0.1:5000",
   "dependencies": {
     "date-fns": "^3.6.0",
     "react-big-calendar": "^1.12.1"

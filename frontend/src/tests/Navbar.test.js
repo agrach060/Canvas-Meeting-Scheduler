@@ -1,59 +1,52 @@
+// App.js
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import '@testing-library/jest-dom';
-import Navbar from '../components/Navbar';
-import { UserContext } from '../context/UserContext';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import LoginSignup from "./pages/LoginSignup";
+import RegisterForm from "./pages/RegisterForm";
+import Logout from "./components/Logout";
+import ManageUsers from "./components/ManageUsers";
+import ManagePrograms from "./components/ManagePrograms";
+import ProtectedRoute from "./context/ProtectedRoute";
+import Unauthorized from "./context/Unauthorized";
+import Times from "./pages/Times";
+import ProgramDetails from "./pages/ProgramDetails";
+import Profile from "./pages/Profile";
+import CalendarView from "./components/CalendarView";
+import Dashboard from "./pages/Dashboard";
 
-const renderNavbar = (user) => {
-  render(
-    <UserContext.Provider value={{ user }}>
-      <Router>
-        <Navbar />
-      </Router>
-    </UserContext.Provider>
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <div id="container">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginSignup />} />
+          <Route path="/registerform" element={<RegisterForm />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route path="/admin" element={<ProtectedRoute allowedAccountTypes={["admin"]}><Home /></ProtectedRoute>} />
+          <Route path="/admin/user-management" element={<ProtectedRoute allowedAccountTypes={["admin"]}><ManageUsers /></ProtectedRoute>} />
+          <Route path="/admin/program-management" element={<ProtectedRoute allowedAccountTypes={["admin"]}><ManagePrograms /></ProtectedRoute>} />
+          <Route path="/admin/view-feedback" element={<ProtectedRoute allowedAccountTypes={["admin"]}><ViewFeedback /></ProtectedRoute>} />
+
+          <Route path="/student" element={<ProtectedRoute allowedAccountTypes={["student"]}><Home /></ProtectedRoute>} />
+          <Route path="/student/courses" element={<ProtectedRoute allowedAccountTypes={["student"]}><Courses /></ProtectedRoute>} />
+
+          <Route path="/instructor" element={<ProtectedRoute allowedAccountTypes={["instructor"]}><Home /></ProtectedRoute>} />
+          <Route path="/instructor/manage-times" element={<ProtectedRoute allowedAccountTypes={["instructor"]}><Times /></ProtectedRoute>} />
+          <Route path="/instructor/edit-class-availability" element={<ProtectedRoute allowedAccountTypes={["instructor"]}><ProgramDetails /></ProtectedRoute>} />
+
+          <Route path="/profile" element={<ProtectedRoute allowedAccountTypes={["instructor", "student", "admin"]}><Profile /></ProtectedRoute>} />
+          <Route path="/view-my-calendar" element={<ProtectedRoute allowedAccountTypes={["instructor", "student", "admin"]}><CalendarView /></ProtectedRoute>} />
+        </Routes>
+      </div>
+    </Router>
   );
-};
+}
 
-describe('Navbar Component', () => {
-  test('renders Navbar with no user', () => {
-    renderNavbar(null);
-
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
-    expect(screen.getByText(/Login/i)).toBeInTheDocument();
-    expect(screen.getByText(/Register/i)).toBeInTheDocument();
-  });
-
-  test('renders Navbar for admin user', () => {
-    const adminUser = { account_type: 'admin' };
-    renderNavbar(adminUser);
-
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
-    expect(screen.getByText(/Manage Users/i)).toBeInTheDocument();
-    expect(screen.getByText(/Manage Programs/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Login/i)).not.toBeInTheDocument();
-  });
-
-  test('renders Navbar for student user', () => {
-    const studentUser = { account_type: 'student', status: 'active' };
-    renderNavbar(studentUser);
-
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
-    expect(screen.getByText(/Meetings/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reserve Appointment/i)).toBeInTheDocument();
-    expect(screen.getByText(/Profile/i)).toBeInTheDocument();
-    expect(screen.getByText(/Logout/i)).toBeInTheDocument();
-  });
-
-  test('renders Navbar for mentor user', () => {
-    const mentorUser = { account_type: 'mentor', status: 'active' };
-    renderNavbar(mentorUser);
-
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
-    expect(screen.getByText(/Meetings/i)).toBeInTheDocument();
-    expect(screen.getByText(/Add Availability/i)).toBeInTheDocument();
-    expect(screen.getByText(/Manage Availability/i)).toBeInTheDocument();
-    expect(screen.getByText(/Profile/i)).toBeInTheDocument();
-    expect(screen.getByText(/Logout/i)).toBeInTheDocument();
-  });
-});
+export default App;

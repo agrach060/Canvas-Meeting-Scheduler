@@ -11,11 +11,13 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import App from "./App.js";
 import { BrowserRouter } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./index.css";
+// import Dashboard from './App.js';
+
 
 // Root Variables
 const root = ReactDOM.createRoot(document.getElementById("root")); // root div from index.html
