@@ -8,138 +8,114 @@
  *
  */
 
-import Navbar from "./components/Navbar";
-import Courses from "./pages/Courses";
-import ViewFeedback from "./components/ViewFeedback";
-import Home from "./pages/Home";
-import LoginSignup from "./pages/LoginSignup";
-import RegisterForm from "./pages/RegisterForm";
-import { Route, Routes } from "react-router-dom";
-import Logout from "./components/Logout";
-import ManageUsers from "./components/ManageUsers";
-import ManagePrograms from "./components/ManagePrograms";
-import ProtectedRoute from "./context/ProtectedRoute";
-import Unauthorized from "./context/Unauthorized";
-import Times from "./pages/Times";
-import ProgramDetails from "./pages/ProgramDetails";
-import Profile from "./pages/Profile";
+import React, { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import Courses from './pages/Courses';
+import Profile from './pages/Profile';
+import { Routes, Route } from 'react-router-dom';
+import LoginButton from './components/CanvasLogin';
 
 function App() {
-  ////////////////////////////////////////////////////////
-  //                 Render Functions                   //
-  ////////////////////////////////////////////////////////
+  const [courseId, setCourseId] = useState('');
+  const [courseRole, setCourseRole] = useState('');
+  const [favoriteCourses, setFavoriteCourse] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [selectedRole, setSelectedRole] = useState([]);
+  const [terms, setTerms] = useState([]);
+  const [chosenTerm, setChosenTerm] = useState('');
+  const [courseTermList, setCourseTermList] = useState([]);
+  const [coursesInTerm, setCourseInTerm] = useState([]);
+  const [allCourseDetails, setAllCourseDetails] = useState([]);
+  const [name, setName] = useState([]);
+  const [name1, setName1] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // HTML for webpage
+  const handleChange = (event) => {
+    const selectedCourse = event.target.value;
+    setName(selectedCourse.name);
+    setCourseId(selectedCourse.id);
+    setCourseRole(selectedCourse.role);
+  };
+
+  const handleRoleChange = (event) => {
+    setSelectedRole(event.target.value);
+  };
+
+  const handleTermChange = (event) => {
+    var courseList = [];
+    setChosenTerm(event.target.value);
+
+    allCourseDetails.forEach((singleCourse) => {
+      if (singleCourse.term === event.target.value) {
+        var entity = {
+          name: singleCourse.name,
+          id: singleCourse.id,
+          role: singleCourse.role,
+        };
+        courseList.push(entity);
+      }
+    });
+
+    setCourseInTerm(courseList);
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('/courseFavorites')
+        .then((res) => res.json())
+        .then((data) => {
+          setFavoriteCourse(data.courses);
+        });
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('/getDistinctRoles')
+        .then((res) => res.json())
+        .then((data) => {
+          setRoles(data);
+        });
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('/getTerms')
+        .then((res) => res.json())
+        .then((data) => {
+          var terms = [];
+          setAllCourseDetails(data);
+          data.forEach((singleCourseDetail) => {
+            if (terms.indexOf(singleCourseDetail.term) === -1) terms.push(singleCourseDetail.term);
+          });
+          setTerms(terms);
+        });
+    }
+  }, [isLoggedIn]);
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
   return (
-    <>
-      <Navbar />
-      <div id="container" className="">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginSignup />} />
-          <Route path="/registerform" element={<RegisterForm />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
-
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedAccountTypes={["admin"]}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/user-management"
-            element={
-              <ProtectedRoute allowedAccountTypes={["admin"]}>
-                <ManageUsers />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/program-management"
-            element={
-              <ProtectedRoute allowedAccountTypes={["admin"]}>
-                <ManagePrograms />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/view-feedback"
-            element={
-              <ProtectedRoute allowedAccountTypes={["admin"]}>
-                <ViewFeedback />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Student Routes */}
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute allowedAccountTypes={["student"]}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/student/courses"
-            element={
-              <ProtectedRoute allowedAccountTypes={["student"]}>
-                <Courses />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Instructor Routes */}
-          <Route
-            path="/instructor"
-            element={
-              <ProtectedRoute allowedAccountTypes={["instructor"]}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/instructor/manage-times"
-            element={
-              <ProtectedRoute allowedAccountTypes={["instructor"]}>
-                <Times />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/instructor/edit-class-availability"
-            element={
-              <ProtectedRoute allowedAccountTypes={["instructor"]}>
-                <ProgramDetails />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Routes For All Roles*/}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute
-                allowedAccountTypes={["instructor", "student", "admin"]}
-              >
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+    <div>
+      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      <div className="content">
+        <Home />
+        {isLoggedIn ? (
+          <Routes>
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <LoginButton isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
