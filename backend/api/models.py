@@ -41,7 +41,6 @@ class CourseDetails(db.Model):
     comments = db.Column(db.Text)
     times = db.relationship("CourseTimes", back_populates="course_details")
     google_credentials = db.Column(db.JSON, nullable=True)
-    test = db.Column(db.String(255))
 
 class CourseTimes(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout }) {
+function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout, setRoles }) {
   const [clientId, setClientId] = useState('');
 
   useEffect(() => {
@@ -25,6 +25,7 @@ function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout }) {
       'url:GET|/api/v1/groups/:group_id',
       'url:GET|/api/v1/courses/:course_id/group_categories',
       'url:GET|/api/v1/group_categories/:group_category_id/groups',
+      // 'url:GET|/api/v1/users/:user_id/enrollments'
     ];
 
     const redirect_uri = window.location.origin;
@@ -49,6 +50,7 @@ function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout }) {
           .then(response => {
             if (response.status === 200) {
               setIsLoggedIn(true);
+              fetchRoles();
             }
           })
           .catch(error => {
@@ -59,12 +61,29 @@ function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout }) {
           .then(response => response.json())
           .then(data => {
             setIsLoggedIn(data.isLoggedIn);
+            if (data.isLoggedIn) {
+              console.log('setting the roles');
+              setRoles(data.roles || []);
+            }
           })
           .catch(error => {
             console.log(error);
             setIsLoggedIn(false);
           });
       }
+    };
+
+    const fetchRoles = () => {
+      fetch('/api/check-login')
+        .then(response => response.json())
+        .then(data => {
+          if (data.isLoggedIn) {
+            setRoles(data.roles || []);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
     };
 
     window.addEventListener('load', handleAuthCallback);
@@ -78,6 +97,7 @@ function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout }) {
     if (onLogout) {
       onLogout();
     }
+    setRoles([]);
     sessionStorage.removeItem('authorizationCode');
     fetch('/api/access_token', {
       method: 'DELETE',

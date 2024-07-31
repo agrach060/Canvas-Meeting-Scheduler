@@ -154,28 +154,25 @@ class GoogleCalendarService:
     # Exchange the authorization code for credentials and save them in the session
     def callback(self, url):
         try:
+            # Exchange the authorization code for credentials
             self.flow.fetch_token(authorization_response=url)
             credentials = self.flow.credentials
+
+            # Save the credentials in the session
             session['credentials'] = self.credentials_to_dict(credentials)
 
+            # Decode the ID token to get user information
             id_info = jwt.decode(credentials.id_token, options={"verify_signature": False})
             user_email = id_info.get('email')
 
             print(f"User Email: {user_email}")
+            print(f"Credentials: {self.credentials_to_dict(credentials)}")
 
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                user = User(email=user_email, account_type='instructor', status='active')
-                db.session.add(user)
-            db.session.commit()
-            instructor = CourseDetails.query.filter_by(instructor_email=user_email).first()
-            print("instructor = ", instructor)
-            if instructor:
-                instructor.google_credentials = self.credentials_to_dict(credentials)
-                print("instructor credentials successfully updated")
-                db.session.commit()
+            # Return the redirect URL
             return 'http://localhost:3000/view-my-calendar'
+
         except Exception as e:
+            print(f"Error during callback: {str(e)}")
             raise Exception(f"Error during callback: {str(e)}")
 
     # Convert credentials to a dictionary
@@ -220,7 +217,7 @@ def get_calendar_events():
 @google_calendar_bp.route('/login')
 def login():
     try:
-        authorization_url = google_calendar_service.login()
+        authorization_url = google_calendar_service.login() 
         return redirect(authorization_url)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -230,9 +227,11 @@ def login():
 def callback():
     try:
         redirect_url = google_calendar_service.callback(request.url)
+        print(f"Redirecting to: {redirect_url}")
         return redirect(redirect_url)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error during callback: {str(e)}")
+        return jsonify({'error': f"Error during callback: {str(e)}"}), 500
 
 # Create a new event in the user's calendar    
 @google_calendar_bp.route('/create_event', methods=['POST'])

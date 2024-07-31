@@ -81,14 +81,7 @@ def create_app():
         print("Reached exchange_code_for_token function.")
         scopes = [
             "url:GET|/api/v1/courses",
-            "url:GET|/api/v1/users/:user_id/courses",
-            "url:GET|/api/v1/courses/:course_id/groups",
-            "url:GET|/api/v1/courses/:course_id/settings",
-            "url:GET|/api/v1/group_categories/:group_category_id",
-            "url:GET|/api/v1/courses/:course_id/search_users",
-            "url:GET|/api/v1/groups/:group_id",
-            "url:GET|/api/v1/courses/:course_id/group_categories",
-            "url:GET|/api/v1/group_categories/:group_category_id/groups",
+            "url:GET|/api/v1/users/self/enrollments"
         ]
 
         token_url = "https://canvas.uw.edu/login/oauth2/token"
@@ -96,19 +89,104 @@ def create_app():
             "code": code,
             "client_id": client_id,
             "client_secret": client_secret,
-            "redirect_uri": "https://localhost:3000",
+            "redirect_uri": current_url,
             "grant_type": "authorization_code",
         }
-        response = requests.post(token_url, data=data)
-        response.raise_for_status()
-        if response.status_code == 200:
+        print(f"Authorization code: {code}")
+
+        try:
+            response = requests.post(token_url, data=data)
+            if response.status_code != 200:
+                print(f"Error exchanging code for token: {response.text}")
+                return {"status": "400", "error": response.text}
+            
+            print("Token exchange successful")
             access_token_response = response.json()
             flask_session.clear()
             save_access_token_info(access_token_response)
-        else:
-            print(f"Error exchanging code for token: {response.text}")
-        return response.status_code
 
+             # Fetch user email
+            print("Fetching user email")
+            user_email = fetch_user_email(access_token_response["access_token"])
+            print("User email: ", user_email)
+            flask_session["user_email"] = user_email
+
+            # Fetch user roles
+            print("Fetching user roles")
+            user_roles = fetch_user_roles(access_token_response["access_token"])
+            print("User roles: ", user_roles)
+            flask_session["user_roles"] = user_roles
+            return {"status": "200"}
+        except requests.exceptions.RequestException as e:
+            print(f"HTTP error occurred: {e}")
+            return {"status": "400", "error": str(e)}
+
+    def fetch_user_email(access_token):
+        print("FETCHING USER EMAIL")
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        try:
+            response = requests.get("https://canvas.uw.edu/api/v1/users/self/profile", headers=headers)
+            response.raise_for_status()
+            user_profile = response.json()
+            return user_profile.get('primary_email')
+        except requests.exceptions.RequestException as e:
+            print(f"HTTP error occurred while fetching email: {e}")
+            return None
+
+    def fetch_user_roles(access_token):
+        print("FETCHING USER ROLES")
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        try:
+            response = requests.get("https://canvas.uw.edu/api/v1/courses", headers=headers)
+            response.raise_for_status()
+            enrollments = response.json()
+            print("Enrollments from Canvas:", enrollments)
+
+            role_mapping = {
+                "StudentEnrollment": "student",
+                "TeacherEnrollment": "instructor",
+                "TaEnrollment": "ta"
+            }
+
+            roles = list(set(role_mapping.get(enrollment['type'], 'unknown') for enrollment in enrollments if enrollment['type'] in role_mapping))
+            print("Mapped Roles:", roles)
+            return roles
+        except requests.exceptions.RequestException as e:
+            print(f"HTTP error occurred while fetching roles: {e}")
+            return []
+
+    @app.route("/api/fetch-courses-and-terms", methods=["GET"])
+    def fetch_courses_and_terms():
+        access_token = flask_session.get("access_token")
+        if not access_token:
+            return jsonify({"error": "User not authenticated"}), 401
+
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        try:
+            # Fetch courses with additional details
+            response = requests.get("https://canvas.uw.edu/api/v1/courses?include[]=term", headers=headers)
+            response.raise_for_status()
+            courses = response.json()
+
+            # Extract terms from courses
+            terms = {}
+            for course in courses:
+                term = course.get("term")
+                if term:
+                    term_id = term.get("id")
+                    if term_id not in terms:
+                        terms[term_id] = term
+
+            return jsonify({"courses": courses, "terms": list(terms.values())}), 200
+        except requests.exceptions.RequestException as e:
+            print(f"HTTP error occurred while fetching courses: {e}")
+            return jsonify({"error": str(e)}), 500
 
     @app.route("/api/check-login", methods=["GET"])
     def check_login():
@@ -140,9 +218,14 @@ def create_app():
                 else:
                     save_access_token_info(access_token_response)
                     print(f"isLoggedIn will be true")
-                    return jsonify({"isLoggedIn": True})
+                    return jsonify({"isLoggedIn": True, "roles": flask_session.get("user_roles", [])})
         else:
-            return jsonify({"isLoggedIn": True})
+            return jsonify({"isLoggedIn": True, "roles": flask_session.get("user_roles", [])})
+        
+    @app.route("/api/fetch-roles", methods=["GET"])
+    def fetch_roles():
+        roles = flask_session.get("user_roles", [])
+        return jsonify({"roles": roles})
 
 
     def refresh_access_token(refresh_token):

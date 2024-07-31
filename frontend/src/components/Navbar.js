@@ -1,15 +1,22 @@
 import React, { useContext, useEffect } from "react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import LoginButton from './CanvasLogin'; // Import the LoginButton component
+import LoginButton from './CanvasLogin';
+import CalendarView from './CalendarView';
+import Home from '../pages/Home';
+import DropdownMenu from "./DropdownMenu";
+import TermsDropdownMenu from "./TermsDropdownMenu";
 
-export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
+export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses = [], terms = [], handleChange, handleTermChange, selectedCourse, selectedTerm }) {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
     console.log('Navbar component rendered');
     console.log('isLoggedIn state:', isLoggedIn);
-  }, [isLoggedIn]);
+    console.log('User roles:', roles);
+    console.log('Courses:', courses);
+    console.log('Terms:', terms);
+  }, [isLoggedIn, roles, courses, terms]);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -21,9 +28,15 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
         UWTechPrep
       </Link>
       <ul className="flex gap-4 h-full">
+        {isLoggedIn && (
+          <>
+            <DropdownMenu courses={courses} handleChange={handleChange} selectedCourse={selectedCourse} />
+            <TermsDropdownMenu terms={terms} handleTermChange={handleTermChange} selectedTerm={selectedTerm} />
+          </>
+        )}
         {!user && (
           <>
-            <CustomLink to="/" className="hover:text-gold font-headlines">
+            <CustomLink to="/" className="hover:text-gold font-headlines" element={<Home />}>
               HOME
             </CustomLink>
             {!isLoggedIn ? (
@@ -31,74 +44,20 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
                 <LoginButton isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
               </CustomLink>
             ) : (
-              <li>
-                <Link to="/" className="hover:text-gold font-headlines" onClick={handleLogout}>
-                  LOGOUT
-                </Link>
-              </li>
-            )}
-          </>
-        )}
-
-        {user && user.account_type === "admin" && (
-          <>
-            <CustomLink to="/admin" className="hover:text-gold font-headlines">
-              HOME
-            </CustomLink>
-            <CustomLink to="/admin/user-management" className="hover:text-gold font-headlines">
-              MANAGE USERS
-            </CustomLink>
-            <CustomLink to="/admin/program-management" className="hover:text-gold font-headlines">
-              MANAGE PROGRAMS
-            </CustomLink>
-            <CustomLink to="/admin/view-feedback" className="hover:text-gold font-headlines">
-              VIEW FEEDBACK
-            </CustomLink>
-          </>
-        )}
-
-        {user && (
-          <>
-            {user.account_type === "student" && (
-              <CustomLink to="/student" className="hover:text-gold font-headlines">
-                HOME
-              </CustomLink>
-            )}
-            {user.account_type === "instructor" && (
-              <CustomLink to="/instructor" className="hover:text-gold font-headlines">
-                HOME
-              </CustomLink>
-            )}
-            {user.status === "active" && (
               <>
-                {user.account_type === "student" && (
-                  <CustomLink to="/student/courses" className="hover:text-gold font-headlines">
-                    COURSES
-                  </CustomLink>
-                )}
-                {user.account_type === "instructor" && (
-                  <>
-                    <CustomLink to="/instructor/manage-times" className="hover:text-gold font-headlines">
-                      TIMES
-                    </CustomLink>
-                    <CustomLink to="/instructor/edit-class-availability" className="hover:text-gold font-headlines">
-                      PROGRAM DETAILS
-                    </CustomLink>
-                  </>
-                )}
+                <CustomLink to="/profile" className="hover:text-gold font-headlines">
+                  PROFILE
+                </CustomLink>
+                <CustomLink to="/view-my-calendar" className="hover:text-gold font-headlines" element={<CalendarView />}>
+                  VIEW MY CALENDAR
+                </CustomLink>
+                <li>
+                  <Link to="/" className="hover:text-gold font-headlines" onClick={handleLogout}>
+                    LOGOUT
+                  </Link>
+                </li>
               </>
             )}
-            <CustomLink to="/profile" className="hover:text-gold font-headlines">
-              PROFILE
-            </CustomLink>
-            <CustomLink to="/view-my-calendar" className="hover:text-gold font-headlines">
-              VIEW MY CALENDAR
-            </CustomLink>
-            <li>
-              <Link to="/" className="hover:text-gold font-headlines" onClick={handleLogout}>
-                LOGOUT
-              </Link>
-            </li>
           </>
         )}
       </ul>
