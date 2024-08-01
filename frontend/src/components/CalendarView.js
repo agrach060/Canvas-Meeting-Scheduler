@@ -11,7 +11,6 @@ import '../styles/GoogleLoginButton.css';
 const localizer = momentLocalizer(moment);
 
 function CalendarView() {
-  console.log('CalendarView component rendered');
   const [events, setEvents] = useState([]); // events data
   const [error, setError] = useState(''); // error messages
   const [isAuthenticated, setIsAuthenticated] = useState(false); // authentication
