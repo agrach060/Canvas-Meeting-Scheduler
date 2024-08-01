@@ -17,7 +17,6 @@ import Login from "../components/Login";
 export default function LoginSignup() {
   // Form Data Variables
   const [currentForm] = useState("login");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -25,5 +24,5 @@ export default function LoginSignup() {
 
   // HTML for webpage
   // Conditional rendering of Login or Signup component based on currentForm value
-  return <div>{currentForm === "login" ? <Login isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} /> : <Signup />}</div>;
+  return <div>{currentForm === "login" ? <Login /> : <Signup />}</div>;
 }

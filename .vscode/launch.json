@@ -1,62 +1,26 @@
 {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "compounds": [
-        {
-            "name": "Flask and React",
-            "configurations": [
-                "Python: Flask",
-                "React: npm start",
-                "React: Chrome"
-            ]
-        }
-    ],
     "configurations": [
         {
             "name": "Python: Flask",
             "type": "python",
             "request": "launch",
             "module": "flask",
+            "cwd":"${workspaceRoot}/backend",
             "env": {
-                "FLASK_APP": "backend/main.py",
-                "FLASK_ENV": "development"
+                "FLASK_APP": "${workspaceRoot}/backend/main.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "0"
             },
             "args": [
                 "run",
-                "--no-debugger",
-                "--no-reload"
+                "--no-debugger"
             ],
-            "jinja": true
-        },
-        {
-            "name": "React: npm start",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/frontend/node_modules/.bin/react-scripts",
-            "args": [
-                "start"
-            ],
-            "cwd": "${workspaceFolder}/frontend",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "start"
-            ],
-            "env": {
-                "BROWSER": "none",
-                "HTTPS": "true"
-            },
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen"
-        },
-        {
-            "name": "React: Chrome",
-            "type": "pwa-chrome",
-            "request": "launch",
-            "url": "https://localhost:3000",
-            "webRoot": "${workspaceFolder}/frontend/src",
-            "sourceMaps": true,
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "jinja": true,
+            "justMyCode": false
         }
     ]
 }
