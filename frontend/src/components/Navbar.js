@@ -3,7 +3,8 @@ import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import LoginButton from './CanvasLogin';
 import Home from '../pages/Home';
-import DropdownMenu from "./CoursesDropdownMenu";
+import Availability from './Availability';
+import CoursesDropdownMenu from "./CoursesDropdownMenu";
 import TermsDropdownMenu from "./TermsDropdownMenu";
 
 export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses = [], terms = [], handleChange, handleTermChange, selectedCourse, selectedTerm }) {
@@ -29,7 +30,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses 
       <ul className="flex gap-4 h-full">
         {isLoggedIn && (
           <>
-            <DropdownMenu courses={courses} handleChange={handleChange} selectedCourse={selectedCourse} />
+            <CoursesDropdownMenu courses={courses} handleChange={handleChange} selectedCourse={selectedCourse} />
             <TermsDropdownMenu terms={terms} handleTermChange={handleTermChange} selectedTerm={selectedTerm} />
           </>
         )}
@@ -47,9 +48,9 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses 
                 <CustomLink to="/profile" className="hover:text-gold font-headlines">
                   PROFILE
                 </CustomLink>
-                {/* <CustomLink to="/view-my-calendar" className="hover:text-gold font-headlines" element={<CalendarView />}>
-                  VIEW MY CALENDAR
-                </CustomLink> */}
+                <CustomLink to="/availability" className="hover:text-gold font-headlines" element={<Availability />}>
+                  AVAILABILITY
+                </CustomLink>
                 <li>
                   <Link to="/" className="hover:text-gold font-headlines" onClick={handleLogout}>
                     LOGOUT

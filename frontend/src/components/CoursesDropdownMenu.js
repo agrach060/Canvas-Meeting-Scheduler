@@ -21,7 +21,8 @@ const StyledFormControl = styled(FormControl)({
     },
 });
 
-export default function DropdownMenu({ courses, handleChange, selectedCourse }) {
+export default function CoursesDropdownMenu({ courses, handleChange, selectedCourse }) {
+    const currentCourses = courses.filter((course) => course.term && course.term.name === 'Summer 2024');
     return (
         <StyledFormControl variant="outlined">
             <InputLabel id="course-label">Courses</InputLabel>
@@ -31,7 +32,7 @@ export default function DropdownMenu({ courses, handleChange, selectedCourse }) 
                 onChange={handleChange}
                 label="Courses"
             >
-                {courses.map((course) => (
+                {currentCourses.map((course) => (
                     <MenuItem key={course.id} value={course.id}>
                         {course.name}
                     </MenuItem>

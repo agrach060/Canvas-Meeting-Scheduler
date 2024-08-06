@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import Availability from './components/Availability';
 import { Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -76,7 +77,7 @@ function App() {
       <div className="content">
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* <Route path="/view-my-calendar" element={<CalendarView />} /> */}
+          <Route path="/availability" element={<Availability />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>

@@ -25,7 +25,7 @@ function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout, setRoles }) {
             'url:GET|/api/v1/groups/:group_id',
             'url:GET|/api/v1/courses/:course_id/group_categories',
             'url:GET|/api/v1/group_categories/:group_category_id/groups',
-            // 'url:GET|/api/v1/users/:user_id/enrollments'
+            'url:GET|/api/v1/users/:user_id/profile'
         ];
 
         const redirect_uri = window.location.origin;
