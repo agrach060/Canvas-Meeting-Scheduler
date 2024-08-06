@@ -30,7 +30,7 @@ const Logout = () => {
         // log out from the website
         const response = await fetch("/logout", {
           method: "POST",
-          credentials: "include", // Necessary to include the HTTP-only cookies
+          credentials: "include",
         });
 
         if (response.ok) {
@@ -39,7 +39,7 @@ const Logout = () => {
           // log out from Google OAuth2
           const googleResponse = await fetch("/api/logout", {
             method: "POST",
-            credentials: "include", // Necessary to include the HTTP-only cookies
+            credentials: "include",
           });
 
           if (!googleResponse.ok) {

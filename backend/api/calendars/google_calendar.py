@@ -12,6 +12,7 @@ from datetime import timedelta
 import pytz # handle time zones
 from ..models import db, User, CourseDetails # import database models
 import jwt # handle JSON Web Tokens
+import requests
 
 # Set environment variable to allow OAuth2 insecure transport (HTTP instead of HTTPS)
 # For testing purposes only, can be deleted after deployment
@@ -371,6 +372,11 @@ def get_instructor_email(course_id):
 # clear the session credentials
 @google_calendar_bp.route('/logout', methods=['POST'])
 def logout():
+    if 'credentials' in session:
+        credentials = google_calendar_service.get_credentials()
+        revoke_token_url = 'https://oauth2.googleapis.com/revoke'
+        token = {'token': credentials.token}
+        requests.post(revoke_token_url, params=token, headers={'content-type': 'application/x-www-form-urlencoded'})
     # Clear Google OAuth2 credentials from the session
     session.pop('credentials', None)
     return jsonify({'message': 'Logged out successfully'}), 200
