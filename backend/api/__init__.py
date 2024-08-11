@@ -55,7 +55,7 @@ def create_app():
     from .instructor import instructor
     from .programs import programs
     from .feedback import feedback
-    from .models import User, Availability, CourseDetails
+    from .models import User, Availability, CourseDetails, CourseMembers
     from .user import user
 
     app.register_blueprint(auth, url_prefix='/')
@@ -115,7 +115,7 @@ def create_app():
         }
         try:
             # Fetch courses with additional details
-            response = requests.get("https://canvas.uw.edu/api/v1/courses?include[]=term&include[]=teachers", headers=headers)
+            response = requests.get("https://canvas.uw.edu/api/v1/courses?include[]=term", headers=headers)
             response.raise_for_status()
             courses = response.json()
 
@@ -132,35 +132,54 @@ def create_app():
                 if term_name == "Summer 2024":
                 # Extract course details
                     course_id = course['id']
-                    # instructor_id = course['teachers'][0].get('id')
-                    instructor_id = None  
-                    quarter = term_name
-                    name = course.get("name")
-                    physical_location = 'N/A' 
-                    meeting_url = 'N/A'
-                    recordings_link = 'N/A' 
-                    discord_link = 'N/A' 
-                    comments = 'N/A'  
-                    google_credentials = 'N/A'
-                    instructor_email = 'N/A'
+                    # Fetch instructor details
+                    instructor_response = requests.get(f"https://canvas.uw.edu/api/v1/courses/{course_id}/search_users?enrollment_type[]=teacher", headers=headers)
+                    instructor_response.raise_for_status()
+                    instructors = instructor_response.json()
+                    
+                    if instructors:
+                        instructor = instructors[0]  
+                        instructor_id = instructor.get('id')
+                        instructor_name = instructor.get('name')
 
-                    existing_course = CourseDetails.query.filter_by(id=course_id).first()
-                    if not existing_course:
-                        # Insert course details into the CourseDetails table
-                        course_details = CourseDetails(
-                            id=course_id,
-                            instructor_id=instructor_id,
-                            quarter=quarter,
-                            name=name,
-                            physical_location=physical_location,
-                            meeting_url=meeting_url,
-                            recordings_link=recordings_link,
-                            discord_link=discord_link,
-                            comments=comments,
-                            google_credentials=google_credentials,
-                            instructor_email=instructor_email
-                        )
-                        db.session.add(course_details)
+                        # Check if the instructor already exists in the database
+                        existing_instructor = User.query.get(instructor_id)
+                        if not existing_instructor:
+                            new_instructor = User(
+                                id=instructor_id,
+                                status='active',
+                                account_type='instructor',
+                                name=instructor_name
+                            )
+                            db.session.add(new_instructor)
+
+                        existing_course = CourseDetails.query.filter_by(id=course_id).first()
+                        if not existing_course:
+                            # Insert course details into the CourseDetails table
+                            course_details = CourseDetails(
+                                id=course_id,
+                                instructor_id=instructor_id,
+                                quarter=term_name,
+                                name=course.get("name"),
+                                physical_location='N/A',
+                                meeting_url='N/A',
+                                recordings_link='N/A',
+                                discord_link='N/A',
+                                comments='N/A',
+                                google_credentials='N/A',
+                                instructor_email='N/A'
+                            )
+                            db.session.add(course_details)
+
+                        # Check if the course member already exists
+                        existing_member = CourseMembers.query.filter_by(course_id=course_id, user_id=instructor_id).first()
+                        if not existing_member:
+                            course_member = CourseMembers(
+                                course_id=course_id,
+                                user_id=instructor_id,
+                                enrollment_type='instructor'
+                            )
+                            db.session.add(course_member)
 
             db.session.commit()
 
@@ -277,7 +296,11 @@ def create_app():
             user_info = {
                 "name": user.name,
                 "pronouns": user.pronouns,
-                "email": user.email
+                "email": user.email,
+                "discord_id": user.discord_id, 
+                "zoom_link": user.zoom_link,
+                "calendar_type": user.calendar_type,
+                "calendar_link": user.calendar_link 
             }
 
             return jsonify(user_info)

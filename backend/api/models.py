@@ -18,6 +18,7 @@ class User(db.Model):
     status = db.Column(db.String(50)) # pending, active, inactive
     email = db.Column(db.String(150), unique=True)
     # password = db.Column(db.String(150))
+    account_type = db.Column(db.String(255))
     title = db.Column(db.String(10))
     name = db.Column(db.String(150))
     sortable_name = db.Column(db.String(150))
