@@ -1,5 +1,5 @@
 /* AppointmentsTable.js
- * Last Edited: 3/26/24
+ * Last Edited: 5/19/24
  *
  * Table UI to show Appointment history for Students and Instructors.
  * Students and Instructors can sort, edit, and cancel appointments.
@@ -839,7 +839,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
         {/* Comment box for students and instructor to type into */}
         <Comment appointmentId={selectedAppointment.appointment_id} />
-      </div >
+      </div>
     );
   };
 

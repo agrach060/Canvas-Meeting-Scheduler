@@ -1,5 +1,5 @@
 /* CreateCoursePopup.js
- * Last Edited: 3/26/24
+ * Last Edited: 6/4/24
  *
  * UI popup shown when instructor clicks on the create course button
  * in the "Program Details" tab. Allows instructor to enter name of course

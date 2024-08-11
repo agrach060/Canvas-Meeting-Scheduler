@@ -1,5 +1,5 @@
 /* ScheduleAppointmentPopup.js
- * Last Edited: 3/26/24
+ * Last Edited: 5/25/24
  *
  * UI Popup shown when student presses "Schedule New Appointment"
  * in their "Courses" tab. Gives the student access to see
@@ -259,7 +259,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
       };
 
       const csrfToken = getCookie("csrf_access_token");
-      let isHandledError = false;
+      let isHandledError = false; // flag to indicate if the error has been handled
 
       fetch(
         `/student/appointments/reserve/${encodeURIComponent(

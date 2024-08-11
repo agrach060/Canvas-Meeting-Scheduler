@@ -1,5 +1,5 @@
 /* UserContext.js
- * Last Edited: 3/26/24
+ * Last Edited: 5/19/24
  *
  * Allows to pass down user data to a component without having
  * to pass props through every level in the component tree of Canvas Meeting Scheduler.

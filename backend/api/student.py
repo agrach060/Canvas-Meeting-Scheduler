@@ -1,6 +1,6 @@
 """ 
  * student.py
- * Last Edited: 3/26/24
+ * Last Edited: 6/4/24
  *
  * Contains functions which are applicable to
  * student user type
@@ -646,27 +646,6 @@ def reserve_appointment(appointment_id, course_id):
         if (not instructor_limits) or (daily_count < instructor_limits.max_daily_meetings and \
             weekly_count < instructor_limits.max_weekly_meetings and monthly_count < instructor_limits.max_monthly_meetings):
             try:
-                
-                # print(f"Student email: {student.email}")
-                # # Get the instructor email
-                # instructor = User.query.get(appointment.host_id)
-                # if not instructor:
-                #     return jsonify({"error": "Instructor not found"}), 400
-                # print(f"Instructor email: {instructor.email}")
-                # # Create the Google Calendar event
-                # google_calendar_service = GoogleCalendarService()
-                # event_details = {
-                #     'summary': 'Appointment',
-                #     'description': appointment.meeting_url,
-                #     'start': f"{appointment.appointment_date}T{appointment.start_time}:00",
-                #     'end': f"{appointment.appointment_date}T{appointment.end_time}:00",
-                #     'timeZone': 'America/Los_Angeles',
-                #     'attendees': [{'email': student.email}, {'email': instructor.email}],  # Add the student as an attendee
-                # }
-                # print(f"Event details: {event_details}")
-                # event_id = google_calendar_service.create_event(event_details)
-                # print(f"Created Google Calendar event with ID: {event_id}")
-
                 appointment.attendee_id = student_id
                 appointment.course_id = course_id
                 appointment.notes = data.get('notes', None)

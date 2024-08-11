@@ -1,5 +1,5 @@
 /* Login.js
- * Last Edited: 3/26/24
+ * Last Edited: 5/19/24
  *
  * Login for students, instructors, admins,
  * to enter email and password, or reset password, or create account

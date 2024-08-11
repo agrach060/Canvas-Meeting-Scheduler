@@ -1,3 +1,15 @@
+""" 
+ * google_calendar.py
+ * Last Edited: 8/6/24
+ *
+ * Contains backend logic and endpoint functions for integrating Google Calendar, 
+ * including OAuth2 authentication, event management, and conflict checking.
+ *
+ * Known Bugs:
+ * - 
+ *
+"""
+
 import os # interact with operating system
 import datetime # handle date and time operations
 from flask import Blueprint, request, redirect, session, jsonify # Flask web framework components

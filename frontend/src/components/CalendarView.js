@@ -1,3 +1,13 @@
+/* CalendarView.js
+ * Last Edited: 6/4/24
+ *
+ * Calendar UI for displaying Google Calendar events
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Calendar, momentLocalizer } from 'react-big-calendar';

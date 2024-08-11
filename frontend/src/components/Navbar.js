@@ -1,5 +1,5 @@
 /* Navbar.js
- * Last Edited: 3/26/24
+ * Last Edited: 5/19/24
  *
  * Navigation bar displayed on top of the webpage which has different tabs.
  * Once user clicks on a tab, they're redirected to a different webpage which

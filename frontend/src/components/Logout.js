@@ -1,5 +1,5 @@
 /* Logout.js
- * Last Edited: 3/26/24
+ * Last Edited: 8/6/24
  *
  * Logout tab that handles instructor, student, and admin logout.
  *
