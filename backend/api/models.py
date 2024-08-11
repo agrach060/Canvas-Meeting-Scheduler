@@ -20,8 +20,11 @@ class User(db.Model):
     # password = db.Column(db.String(150))
     title = db.Column(db.String(10))
     name = db.Column(db.String(150))
+    sortable_name = db.Column(db.String(150))
     pronouns = db.Column(db.String(150))
     discord_id = db.Column(db.String(255))
+    zoom_link = db.Column(db.String(255))
+    calendar_type = db.Column(db.String(150))
     calendar_link = db.Column(db.String(255))
     availabilities = db.relationship('Availability')
     appointment_comment = db.relationship('AppointmentComment', backref='user', cascade='all, delete-orphan')
@@ -53,6 +56,7 @@ class CourseMembers(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    enrollment_type = db.Column(db.String(150))
 
 class ProgramDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -259,6 +259,50 @@ def create_app():
         db.session.commit()
         return jsonify({'message': 'Availability added successfully!'}), 201
     
+    @app.route("/api/user/profile", methods=["GET"])
+    def get_user_profile():
+        user_id = flask_session.get('user_id')
+        if not user_id:
+            print("User ID not found in session")
+            return jsonify({"error": "User not authenticated"}), 401
+        if not user_id:
+            return jsonify({"error": "User not authenticated"}), 401
+        
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        if request.method == "GET":
+            user_info = {
+                "name": user.name,
+                "pronouns": user.pronouns,
+                "email": user.email
+            }
+
+            return jsonify(user_info)
+        
+        
+    @app.route("/api/user/profile/update", methods=["POST"])
+    def update_user_profile():
+        user_id = flask_session.get('user_id')
+        if not user_id:
+            return jsonify({"error": "User not authenticated"}), 401
+        
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        data = request.get_json()
+        user.discord_id = data.get("discord_id", user.discord_id)
+        user.zoom_link = data.get("zoom_link", user.zoom_link)
+        user.calendar_type = data.get("calendar_type", user.calendar_type)
+        user.calendar_link = data.get("calendar_link", user.calendar_link)
+
+        db.session.commit()
+        return jsonify({"message": "Profile updated successfully!"}), 200
+    
     """""""""""""""""""""""""""""""""""""""""""""""""""""
     ""             Backend Only Functions              ""
     """""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -311,19 +355,26 @@ def create_app():
         response = requests.get("https://canvas.uw.edu/api/v1/users/self/profile", headers=headers)
         if response.status_code == 200:
             user_profile = response.json()
-            new_user = User(
-                id=user_profile.get('id'),
-                status='active',
-                email=user_profile.get('primary_email'),
-                title=user_profile.get('title'),
-                name=user_profile.get('name'),
-                pronouns=user_profile.get('pronouns'),
-                discord_id=None,
-                calendar_link=None,
-            )
-            with app.app_context():
-                db.session.add(new_user)
-                db.session.commit()
+            flask_session['user_id'] = user_profile.get('id')
+            # Check if user already exists in the database
+            existing_user = User.query.get(user_profile.get('id'))
+            if not existing_user:
+                new_user = User(
+                    id=user_profile.get('id'),
+                    status='active',
+                    email=user_profile.get('primary_email'),
+                    title=user_profile.get('title'),
+                    name=user_profile.get('name'),
+                    sortable_name=user_profile.get('sortable_name'),
+                    pronouns=user_profile.get('pronouns'),
+                    discord_id=None,
+                    zoom_link=None,
+                    calendar_type=None,
+                    calendar_link=None,
+                )
+                with app.app_context():
+                    db.session.add(new_user)
+                    db.session.commit()
 
     def refresh_access_token(refresh_token):
         print("Reached refresh_access_token function ")
