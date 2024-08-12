@@ -20,7 +20,7 @@ const Availability = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const availability = {
-            user_id: 1,  //         example
+            user_id: 1,
             date: selectedDate,
             start_time: startTime,
             end_time: endTime,
@@ -38,9 +38,9 @@ const Availability = () => {
             if (response.ok) {
                 const result = await response.json();
                 console.log('Availability added successfully:', result);
-                // Optionally, show a success message to the user
+                window.alert("Availability added successfully!");
             } else {
-                window.alert("Availability already exist!");;
+                window.alert("Availability already exist!");
             }
         } catch (error) {
             console.error('Error adding availability:', error);

@@ -132,6 +132,7 @@ def create_app():
                 if term_name == "Summer 2024":
                 # Extract course details
                     course_id = course['id']
+                    flask_session["course_id"] = course_id
                     # Fetch instructor details
                     instructor_response = requests.get(f"https://canvas.uw.edu/api/v1/courses/{course_id}/search_users?enrollment_type[]=teacher", headers=headers)
                     instructor_response.raise_for_status()
@@ -229,12 +230,6 @@ def create_app():
                     return jsonify({"isLoggedIn": True, "roles": flask_session.get("user_roles", [])})
         else:
             return jsonify({"isLoggedIn": True, "roles": flask_session.get("user_roles", [])})
-    
-    # Fetch the user's role 
-    @app.route("/api/fetch-roles", methods=["GET"])
-    def fetch_roles():
-        roles = flask_session.get("user_roles", [])
-        return jsonify({"roles": roles})
 
     # Delete access token from the session
     @app.route("/api/access_token", methods=["DELETE"])
@@ -266,7 +261,7 @@ def create_app():
             return jsonify({'error': 'Availability already exists for the specified time and date.'}), 409
 
         new_availability = Availability(
-            user_id=data['user_id'],
+            user_id=flask_session.get('user_id'),
             program_id=data.get('program_id'),
             date=data['date'],
             start_time=data['start_time'],
@@ -325,7 +320,63 @@ def create_app():
 
         db.session.commit()
         return jsonify({"message": "Profile updated successfully!"}), 200
-    
+        
+    @app.route("/api/fetch-course-role", methods=["POST"])
+    def fetch_course_role():
+        print("Reached fetch_course_role")
+        data = request.get_json()
+        course_id = data.get("course_id")
+        user_id = flask_session.get('user_id')
+        print("course_id: ", course_id)
+        print("user_id: ", user_id)
+
+        if not course_id or not user_id:
+            return jsonify({"error": "Course ID or User ID not provided"}), 400
+
+        access_token = flask_session.get("access_token")
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # Fetch user's enrollments for the selected course
+        enrollments_response = requests.get(
+            f"https://canvas.uw.edu/api/v1/courses/{course_id}/search_users?per_page=50&include[]=enrollments",
+            headers=headers
+        )
+
+        if enrollments_response.status_code == 200:
+            enrollments = enrollments_response.json()
+            # Determine the user's primary role based on enrollments
+            enrollment_type = None
+            if enrollments:
+                enrollment_types = [enrollment.get('role') 
+                    for enrollment_obj in enrollments 
+                    if enrollment_obj.get('id') == user_id  # Filter by specific user ID
+                    for enrollment in enrollment_obj.get('enrollments', [])]
+                print("enrollment_types: ", enrollment_types)
+                if 'TeacherEnrollment' in enrollment_types:
+                    enrollment_type = 'instructor'
+                elif 'StudentEnrollment' in enrollment_types:
+                    enrollment_type = 'student'
+                else:
+                    enrollment_type = enrollment_types[0]  # If other roles exist, take the first one
+
+            # Update the user's account type in the database
+            existing_user = User.query.get(user_id)
+            print("existing_user: ", existing_user)
+            if existing_user:
+                existing_user.account_type = enrollment_type
+                try:
+                    db.session.add(existing_user)
+                    db.session.commit()
+                    print(f"User {user_id} account_type updated to {enrollment_type}")
+                except Exception as e:
+                    print(f"Failed to commit changes to the database: {e}")
+                    db.session.rollback()
+                    return jsonify({"error": "Failed to update account type"}), 500
+
+            return jsonify({"message": "Course role fetched and stored successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to fetch enrollments"}), 500
+        
     """""""""""""""""""""""""""""""""""""""""""""""""""""
     ""             Backend Only Functions              ""
     """""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -374,11 +425,13 @@ def create_app():
             return {"status": "400", "error": str(e)}
         
     def fetch_and_store_user_info(access_token):
+        print("reached fetch_and_store_user_info")
         headers = {"Authorization": f"Bearer {access_token}"}
         response = requests.get("https://canvas.uw.edu/api/v1/users/self/profile", headers=headers)
         if response.status_code == 200:
             user_profile = response.json()
             flask_session['user_id'] = user_profile.get('id')
+
             # Check if user already exists in the database
             existing_user = User.query.get(user_profile.get('id'))
             if not existing_user:

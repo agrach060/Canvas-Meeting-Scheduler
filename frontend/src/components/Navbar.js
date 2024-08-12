@@ -30,8 +30,8 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses 
       <ul className="flex gap-4 h-full">
         {isLoggedIn && (
           <>
-            <CoursesDropdownMenu courses={courses} handleChange={handleChange} selectedCourse={selectedCourse} />
             <TermsDropdownMenu terms={terms} handleTermChange={handleTermChange} selectedTerm={selectedTerm} />
+            <CoursesDropdownMenu courses={courses} handleChange={handleChange} selectedCourse={selectedCourse} />
           </>
         )}
         {!user && (

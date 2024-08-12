@@ -22,12 +22,6 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      // Fetch roles
-      fetch('/api/fetch-roles')
-        .then(response => response.json())
-        .then(data => setRoles(data.roles || []))
-        .catch(error => console.error('Error fetching roles:', error));
-
       // Fetch courses and terms
       fetch('/api/fetch-courses-and-terms')
         .then(response => response.json())
@@ -41,12 +35,33 @@ function App() {
     }
   }, [isLoggedIn]);
 
-  const handleChange = (event) => {
+  const handleChange = async (event) => {
     const selectedCourse = event.target.value;
+    console.log("selectedCourse", selectedCourse);
     setName(selectedCourse.name);
     setCourseId(selectedCourse.id);
     setCourseRole(selectedCourse.role);
     setSelectedCourse(selectedCourse);
+    try {
+      console.log("Trying to fetch the course role");
+      const response = await fetch('/api/fetch-course-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ course_id: selectedCourse }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setCourseRole(result.role);
+        console.log("Course role fetched successfully");
+      } else {
+        console.error("Failed to fetch course role");
+      }
+    } catch (error) {
+      console.error("Error fetching course role:", error);
+    }
   };
 
   const handleTermChange = (event) => {
