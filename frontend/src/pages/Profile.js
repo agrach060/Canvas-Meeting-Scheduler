@@ -1,3 +1,13 @@
+/* Profile.js
+ * Last Edited: 8/14/24
+ *
+ * Frontend form to fetch, display, and update user's profile information
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React, { useState, useEffect } from "react";
 import { getCookie } from "../utils/GetCookie";
 

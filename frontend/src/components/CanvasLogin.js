@@ -1,3 +1,13 @@
+/* CanvasLogin.js
+ * Last Edited: 7/26/24
+ *
+ * User authorization via Canvas
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React, { useState, useEffect } from 'react';
 
 function LoginButton({ isLoggedIn, setIsLoggedIn, onLogout, setRoles }) {

@@ -1,3 +1,13 @@
+/* CoursesDropDownMenu.js
+ * Last Edited: 7/26/24
+ *
+ * UI for courses dropdown menu
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React from 'react';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { styled } from '@mui/system';
@@ -22,7 +32,7 @@ const StyledFormControl = styled(FormControl)({
 });
 
 export default function CoursesDropdownMenu({ courses, handleChange, selectedCourse }) {
-    const currentCourses = courses.filter((course) => course.term && course.term.name === 'Summer 2024');
+    const currentCourses = courses.filter((course) => course.term);
     return (
         <StyledFormControl variant="outlined">
             <InputLabel id="course-label">Courses</InputLabel>

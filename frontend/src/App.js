@@ -1,3 +1,13 @@
+/* App.js
+ * Last Edited: 8/14/24
+ *
+ * Renders different pages based on user interactions and selected data
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -29,11 +39,31 @@ function App() {
           const courses = data.courses || [];
           const terms = data.terms || [];
           setAllCourseDetails(courses);
+          console.log('All courses:', courses);
           setTerms(terms);
+
+          // // Automatically select the current term
+          // const currentTerm = getCurrentTerm(terms);
+          // console.log('Current term:', currentTerm);
+          // if (currentTerm) {
+          //   setChosenTerm(currentTerm.id);
+          //   setSelectedTerm(currentTerm.id);
+          //   const coursesInSelectedTerm = courses.filter(course => course.term && course.term.id === currentTerm.id);
+          //   setCoursesInTerm(coursesInSelectedTerm);
+          // }
         })
         .catch(error => console.error('Error fetching courses and terms:', error));
     }
   }, [isLoggedIn]);
+
+  // const getCurrentTerm = (terms) => {
+  //   const currentDate = new Date();
+  //   return terms.find(term => {
+  //     const startDate = new Date(term.start_at);
+  //     const endDate = new Date(term.end_at);
+  //     return currentDate >= startDate && currentDate <= endDate;
+  //   });
+  // };
 
   const handleChange = async (event) => {
     const selectedCourse = event.target.value;
@@ -66,6 +96,7 @@ function App() {
 
   const handleTermChange = (event) => {
     const selectedTerm = event.target.value;
+    console.log('Selected term:', selectedTerm);
     setChosenTerm(selectedTerm);
     const coursesInSelectedTerm = allCourseDetails.filter(course => course.term && course.term.id === selectedTerm);
     setCoursesInTerm(coursesInSelectedTerm);
@@ -88,6 +119,7 @@ function App() {
         handleTermChange={handleTermChange}
         selectedCourse={selectedCourse}
         selectedTerm={selectedTerm}
+        coursesInTerm={coursesInTerm}
       />
       <div className="content">
         <Routes>

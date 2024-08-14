@@ -1,3 +1,13 @@
+/* Availability.js
+ * Last Edited: 7/26/24
+ *
+ * UI form to choose user's availability
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React, { useState } from 'react';
 
 const Availability = () => {

@@ -1,3 +1,15 @@
+/* Navbar.js
+ * Last Edited: 7/26/24
+ *
+ * Navigation bar displayed on top of the webpage which has different tabs.
+ * Once user clicks on a tab, they're redirected to a different webpage which
+ * contains the contents of the tab.
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React, { useContext, useEffect } from "react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -7,13 +19,11 @@ import Availability from './Availability';
 import CoursesDropdownMenu from "./CoursesDropdownMenu";
 import TermsDropdownMenu from "./TermsDropdownMenu";
 
-export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses = [], terms = [], handleChange, handleTermChange, selectedCourse, selectedTerm }) {
+export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses = [], terms = [], handleChange, handleTermChange, selectedCourse, selectedTerm, coursesInTerm }) {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    console.log('Navbar component rendered');
     console.log('isLoggedIn state:', isLoggedIn);
-    console.log('User roles:', roles);
     console.log('Courses:', courses);
     console.log('Terms:', terms);
   }, [isLoggedIn, roles, courses, terms]);
@@ -31,7 +41,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn, roles = [], courses 
         {isLoggedIn && (
           <>
             <TermsDropdownMenu terms={terms} handleTermChange={handleTermChange} selectedTerm={selectedTerm} />
-            <CoursesDropdownMenu courses={courses} handleChange={handleChange} selectedCourse={selectedCourse} />
+            <CoursesDropdownMenu courses={coursesInTerm} handleChange={handleChange} selectedCourse={selectedCourse} />
           </>
         )}
         {!user && (

@@ -1,3 +1,13 @@
+/* TermsDropDownMenu.js
+ * Last Edited: 7/26/24
+ *
+ * UI for terms dropdown menu
+ *
+ * Known Bugs:
+ * -
+ *
+ */
+
 import React from 'react';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { styled } from '@mui/system';

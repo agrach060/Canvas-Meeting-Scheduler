@@ -1,6 +1,6 @@
 """ 
  * models.py
- * Last Edited: 3/26/24
+ * Last Edited: 8/14/24
  *
  * Contains all Tables and their attributes using SQLAlchemy
  *
@@ -14,11 +14,8 @@ from datetime import datetime
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    # account_type=db.Column(db.String(50)) # student, instructor, admin
     status = db.Column(db.String(50)) # pending, active, inactive
     email = db.Column(db.String(150), unique=True)
-    # password = db.Column(db.String(150))
-    account_type = db.Column(db.String(255))
     title = db.Column(db.String(10))
     name = db.Column(db.String(150))
     sortable_name = db.Column(db.String(150))
@@ -41,7 +38,6 @@ class CourseDetails(db.Model):
     discord_link = db.Column(db.String(255))
     comments = db.Column(db.Text)
     times = db.relationship("CourseTimes", back_populates="course_details")
-    # -------------------------------------------------
     google_credentials = db.Column(db.JSON, nullable=True)
     instructor_email = db.Column(db.String(255))
 

@@ -1,6 +1,6 @@
 """ 
  * __init__.py
- * Last Edited: 8/6/24
+ * Last Edited: 8/14/24
  *
  * Contains initialization of the Flask App
  *
@@ -73,25 +73,22 @@ def create_app():
     """""""""""""""""""""""""""""""""""""""""""""""""""""
     ""             Endpoint Functions                  ""
     """""""""""""""""""""""""""""""""""""""""""""""""""""
-    # Getting Client ID 
+    # Get Client ID 
     @app.route("/api/get-client-id", methods=["GET"])
     def get_client_id():
-        print("Reached /api/get-client-id endpoint.")
         return jsonify({"client_id": os.getenv("CLIENT_ID")})
 
-    # Clearing current user session
+    # Clear current user session
     @app.route("/api/clear_session", methods=["POST"])
     def clear_session_endpoint():
-        print("Received request to clear the current user session.")
         flask_session.pop("access_token", None)
         flask_session.pop("refresh_token", None)
         flask_session.pop("token_expiry", None)
         return jsonify({"message": "Session cleared successfully"}), 200
 
-    # Obtaining authorization code
+    # Obtain authorization code
     @app.route("/api/authorization-code", methods=["POST"])
     def receive_authorization_code():
-        print("Reached /api/authorization-code endpoint.")
         data = request.get_json()
         code = data.get("code")
         current_url = data.get("currentUrl")
@@ -114,7 +111,7 @@ def create_app():
             "Authorization": f"Bearer {access_token}"
         }
         try:
-            # Fetch courses with additional details
+            # Fetch courses including terms
             response = requests.get("https://canvas.uw.edu/api/v1/courses?include[]=term", headers=headers)
             response.raise_for_status()
             courses = response.json()
@@ -129,11 +126,11 @@ def create_app():
                     if term_id not in terms:
                         terms[term_id] = term
 
-                if term_name == "Summer 2024":
-                # Extract course details
-                    course_id = course['id']
-                    flask_session["course_id"] = course_id
-                    # Fetch instructor details
+            # Extract course details
+                course_id = course['id']
+                flask_session["course_id"] = course_id
+                # Fetch instructor details
+                try:
                     instructor_response = requests.get(f"https://canvas.uw.edu/api/v1/courses/{course_id}/search_users?enrollment_type[]=teacher", headers=headers)
                     instructor_response.raise_for_status()
                     instructors = instructor_response.json()
@@ -149,7 +146,6 @@ def create_app():
                             new_instructor = User(
                                 id=instructor_id,
                                 status='active',
-                                account_type='instructor',
                                 name=instructor_name
                             )
                             db.session.add(new_instructor)
@@ -182,6 +178,11 @@ def create_app():
                             )
                             db.session.add(course_member)
 
+                except requests.exceptions.RequestException as e:
+                    # Log the error and skip to the next course
+                    print(f"Error fetching instructor details for course {course_id}: {e}")
+                    continue                
+
             db.session.commit()
 
             return jsonify({"courses": courses, "terms": list(terms.values())}), 200
@@ -192,7 +193,6 @@ def create_app():
     # Check if the user is logged in
     @app.route("/api/check-login", methods=["GET"])
     def check_login():
-        print("checking /api/check-login ")
         access_token = flask_session.get("access_token")
         if access_token is None or access_token == "":
             return jsonify({"isLoggedIn": False}), 401
@@ -226,7 +226,6 @@ def create_app():
                     return jsonify({"isLoggedIn": False}), 401
                 else:
                     save_access_token_info(access_token_response)
-                    print("isLoggedIn will be true")
                     return jsonify({"isLoggedIn": True, "roles": flask_session.get("user_roles", [])})
         else:
             return jsonify({"isLoggedIn": True, "roles": flask_session.get("user_roles", [])})
@@ -234,7 +233,6 @@ def create_app():
     # Delete access token from the session
     @app.route("/api/access_token", methods=["DELETE"])
     def delete_access_token():
-        print("Reached /api/access_token endpoint ")
         try:
             flask_session.pop("access_token", None)
             flask_session.pop("token_type", None)
@@ -259,7 +257,7 @@ def create_app():
 
         if existing_availability:
             return jsonify({'error': 'Availability already exists for the specified time and date.'}), 409
-
+        # Add new availability
         new_availability = Availability(
             user_id=flask_session.get('user_id'),
             program_id=data.get('program_id'),
@@ -273,13 +271,12 @@ def create_app():
         db.session.commit()
         return jsonify({'message': 'Availability added successfully!'}), 201
     
+    # Get user profile
     @app.route("/api/user/profile", methods=["GET"])
     def get_user_profile():
         user_id = flask_session.get('user_id')
         if not user_id:
             print("User ID not found in session")
-            return jsonify({"error": "User not authenticated"}), 401
-        if not user_id:
             return jsonify({"error": "User not authenticated"}), 401
         
         user = User.query.get(user_id)
@@ -300,7 +297,7 @@ def create_app():
 
             return jsonify(user_info)
         
-        
+    # Update user profile after user Profile page 
     @app.route("/api/user/profile/update", methods=["POST"])
     def update_user_profile():
         user_id = flask_session.get('user_id')
@@ -320,15 +317,13 @@ def create_app():
 
         db.session.commit()
         return jsonify({"message": "Profile updated successfully!"}), 200
-        
+
+    # Determine user role in course
     @app.route("/api/fetch-course-role", methods=["POST"])
     def fetch_course_role():
-        print("Reached fetch_course_role")
         data = request.get_json()
         course_id = data.get("course_id")
         user_id = flask_session.get('user_id')
-        print("course_id: ", course_id)
-        print("user_id: ", user_id)
 
         if not course_id or not user_id:
             return jsonify({"error": "Course ID or User ID not provided"}), 400
@@ -349,7 +344,8 @@ def create_app():
             if enrollments:
                 enrollment_types = [enrollment.get('role') 
                     for enrollment_obj in enrollments 
-                    if enrollment_obj.get('id') == user_id  # Filter by specific user ID
+                    # Filter by specific user ID
+                    if enrollment_obj.get('id') == user_id  
                     for enrollment in enrollment_obj.get('enrollments', [])]
                 print("enrollment_types: ", enrollment_types)
                 if 'TeacherEnrollment' in enrollment_types:
@@ -357,21 +353,37 @@ def create_app():
                 elif 'StudentEnrollment' in enrollment_types:
                     enrollment_type = 'student'
                 else:
-                    enrollment_type = enrollment_types[0]  # If other roles exist, take the first one
+                    # If other roles exist, take the first one
+                    enrollment_type = enrollment_types[0]  
 
-            # Update the user's account type in the database
-            existing_user = User.query.get(user_id)
-            print("existing_user: ", existing_user)
-            if existing_user:
-                existing_user.account_type = enrollment_type
+            # Check if the user is already in the CourseMembers table for this course
+            existing_member = CourseMembers.query.filter_by(course_id=course_id, user_id=user_id).first()
+            
+            if existing_member:
+                # Update the existing member's role if needed
+                existing_member.enrollment_type = enrollment_type
                 try:
-                    db.session.add(existing_user)
                     db.session.commit()
-                    print(f"User {user_id} account_type updated to {enrollment_type}")
+                    print(f"User {user_id}'s role updated to {enrollment_type} in course {course_id}")
                 except Exception as e:
                     print(f"Failed to commit changes to the database: {e}")
                     db.session.rollback()
-                    return jsonify({"error": "Failed to update account type"}), 500
+                    return jsonify({"error": "Failed to update course member"}), 500
+            else:
+                # Add the user to the CourseMembers table if they are not already there
+                new_member = CourseMembers(
+                    course_id=course_id,
+                    user_id=user_id,
+                    enrollment_type=enrollment_type
+                )
+                try:
+                    db.session.add(new_member)
+                    db.session.commit()
+                    print(f"User {user_id} added to course {course_id} as {enrollment_type}")
+                except Exception as e:
+                    print(f"Failed to commit new member to the database: {e}")
+                    db.session.rollback()
+                    return jsonify({"error": "Failed to add course member"}), 500
 
             return jsonify({"message": "Course role fetched and stored successfully"}), 200
         else:
